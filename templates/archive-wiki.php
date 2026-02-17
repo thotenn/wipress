@@ -1,5 +1,13 @@
 <?php
-get_header();
+?><!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php wp_head(); ?>
+</head>
+<body <?php body_class('wipress-standalone'); ?>>
+<?php wp_body_open(); ?>
 
 $projects = Wipress_REST_API::list_projects_internal();
 ?>
@@ -30,4 +38,6 @@ $projects = Wipress_REST_API::list_projects_internal();
     </div>
 </div>
 
-<?php get_footer(); ?>
+<?php wp_footer(); ?>
+</body>
+</html>

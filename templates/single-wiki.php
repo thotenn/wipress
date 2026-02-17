@@ -1,5 +1,13 @@
 <?php
-get_header();
+?><!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php wp_head(); ?>
+</head>
+<body <?php body_class('wipress-standalone'); ?>>
+<?php wp_body_open();
 
 $current_post_id = get_the_ID();
 $project_terms = get_the_terms($current_post_id, 'wiki_project');
@@ -73,4 +81,6 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
     </div>
 </div>
 
-<?php get_footer(); ?>
+<?php wp_footer(); ?>
+</body>
+</html>
