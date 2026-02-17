@@ -220,12 +220,12 @@ body.wipress-standalone {
 .wdh-inf-grid {
     display: grid;
     grid-template-columns: 260px 1fr 240px;
-    overflow: hidden;
+    overflow: clip;
 }
 
 /* --- Sidebar left --- */
 .wdh-inf-sidebar-left {
-    padding: 16px 0;
+    padding: 0 0 16px;
     border-right: 1px solid var(--border);
     height: calc(100vh - 52px);
     position: sticky;
@@ -237,7 +237,7 @@ body.wipress-standalone {
 /* --- Sidebar search --- */
 .wdh-search {
     position: relative;
-    padding: 12px 16px;
+    padding: 8px 16px;
     border-bottom: 1px solid var(--border);
 }
 
@@ -262,7 +262,6 @@ body.wipress-standalone {
     font-size: 0.85rem;
     font-family: inherit;
     outline: none;
-    box-sizing: border-box;
 }
 
 .wdh-search-input::placeholder {
@@ -437,10 +436,6 @@ body.wipress-standalone {
     transform: rotate(90deg);
 }
 
-.collapsed > .wdh-tree-toggle .wdh-chevron {
-    transform: rotate(0deg);
-}
-
 /* Show/hide children */
 .collapsed > .wdh-tree-children {
     display: none;
@@ -467,7 +462,6 @@ body.wipress-standalone {
 .wdh-render {
     line-height: 1.7;
     overflow-wrap: break-word;
-    min-width: 0;
 }
 
 .wdh-render h2 {
@@ -1058,7 +1052,6 @@ body.wipress-standalone {
     }
 
     .wdh-inf-header-left {
-        flex: 1;
         gap: 8px;
     }
 
