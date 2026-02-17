@@ -63,6 +63,24 @@ body {
     color: var(--accent);
     font-size: 1rem;
     white-space: nowrap;
+    text-decoration: none;
+}
+
+.wdh-inf-logo:hover {
+    opacity: 0.8;
+}
+
+.wdh-inf-site-title {
+    font-size: 0.8rem;
+    color: var(--text);
+    text-decoration: none;
+    opacity: 0.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.wdh-inf-site-title:hover {
+    opacity: 0.7;
 }
 
 .wdh-inf-tabs {
@@ -80,7 +98,7 @@ body {
     font-size: 0.9rem;
     opacity: 0.6;
     white-space: nowrap;
-    padding-bottom: 16px;
+    padding-bottom: 4px;
     transition: opacity 0.15s;
 }
 

@@ -30,7 +30,7 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
     <?php if ($project) : ?>
     <header class="wdh-inf-header">
         <div class="wdh-inf-header-left">
-            <div class="wdh-inf-logo"><?php echo esc_html($project->name); ?></div>
+            <a href="<?php echo esc_url(home_url('/wiki/' . $project->slug . '/')); ?>" class="wdh-inf-logo"><?php echo esc_html($project->name); ?></a>
             <nav class="wdh-inf-tabs">
                 <?php foreach ($sections as $s) :
                     $active = ($section && $s['term']->term_id === $section->term_id) ? 'is-active' : '';
@@ -41,6 +41,7 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
                 <?php endforeach; ?>
             </nav>
         </div>
+        <a href="<?php echo esc_url(home_url('/')); ?>" class="wdh-inf-site-title"><?php echo esc_html(get_bloginfo('name')); ?></a>
         <div class="wdh-inf-header-actions">
             <button type="button" class="wdh-header-btn" id="wdh-btn-download-md"
                     data-tooltip="Download as Markdown"
