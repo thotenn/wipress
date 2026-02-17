@@ -40,5 +40,6 @@ add_action('init', function() {
 // Activation
 register_activation_hook(__FILE__, function() {
     Wipress_Post_Type::register();
+    Wipress_Post_Type::register_rewrite_rules();
     flush_rewrite_rules();
 });
