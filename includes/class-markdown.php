@@ -13,13 +13,14 @@ class Wipress_Markdown {
         if (self::$parsedown === null) {
             require_once WIPRESS_PATH . 'vendor/Parsedown.php';
             self::$parsedown = new Parsedown();
-            self::$parsedown->setSafeMode(true);
+            self::$parsedown->setMarkupEscaped(false);
         }
         return self::$parsedown;
     }
 
     public static function render($markdown) {
-        return self::get_parsedown()->text($markdown);
+        $html = self::get_parsedown()->text($markdown);
+        return wp_kses_post($html);
     }
 
     public static function filter_content($content) {

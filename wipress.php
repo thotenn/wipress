@@ -22,6 +22,9 @@ require_once WIPRESS_PATH . 'includes/class-markdown.php';
 require_once WIPRESS_PATH . 'includes/class-rest-api.php';
 require_once WIPRESS_PATH . 'includes/class-mcp-server.php';
 
+// Allow Application Passwords over HTTP in local dev
+add_filter('wp_is_application_passwords_available', '__return_true');
+
 // Init
 Wipress_Post_Type::init();
 Wipress_Template::init();
