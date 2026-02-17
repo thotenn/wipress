@@ -1,20 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     // --- Sidebar tree expand/collapse ---
+    function toggleTreeItem(li) {
+        var btn = li.querySelector(':scope > .wdh-tree-toggle');
+        var expanded = li.classList.contains('expanded');
+
+        if (expanded) {
+            li.classList.remove('expanded');
+            li.classList.add('collapsed');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        } else {
+            li.classList.remove('collapsed');
+            li.classList.add('expanded');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+        }
+    }
+
     document.querySelectorAll('.wdh-tree-toggle').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            var li = btn.closest('li');
-            var expanded = li.classList.contains('expanded');
+            toggleTreeItem(btn.closest('li'));
+        });
+    });
 
-            if (expanded) {
-                li.classList.remove('expanded');
-                li.classList.add('collapsed');
-                btn.setAttribute('aria-expanded', 'false');
-            } else {
-                li.classList.remove('collapsed');
-                li.classList.add('expanded');
-                btn.setAttribute('aria-expanded', 'true');
+    // Folder items (no content) toggle on click instead of navigating
+    document.querySelectorAll('.wdh-tree-folder').forEach(function(span) {
+        span.addEventListener('click', function() {
+            toggleTreeItem(span.closest('li'));
+        });
+        span.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleTreeItem(span.closest('li'));
             }
         });
     });

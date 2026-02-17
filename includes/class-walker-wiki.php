@@ -33,8 +33,10 @@ class Wipress_Walker extends Walker {
         $has_children = !empty($args['has_children']);
         $is_active = ($post->ID === $this->current_post_id);
         $is_ancestor = in_array($post->ID, $this->ancestors);
+        $is_folder = $has_children && empty(trim($post->post_content));
 
         if ($has_children) $classes[] = 'has-children';
+        if ($is_folder) $classes[] = 'is-folder';
         if ($is_active) $classes[] = 'active';
         if ($is_ancestor) $classes[] = 'ancestor';
 
@@ -52,7 +54,11 @@ class Wipress_Walker extends Walker {
             $output .= '</button>';
         }
 
-        $output .= '<a href="' . esc_url(get_permalink($post)) . '">' . esc_html(get_the_title($post)) . '</a>';
+        if ($is_folder) {
+            $output .= '<span class="wdh-tree-folder" role="button" tabindex="0">' . esc_html(get_the_title($post)) . '</span>';
+        } else {
+            $output .= '<a href="' . esc_url(get_permalink($post)) . '">' . esc_html(get_the_title($post)) . '</a>';
+        }
     }
 
     public function end_el(&$output, $post, $depth = 0, $args = []) {

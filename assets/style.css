@@ -113,16 +113,33 @@ body {
     line-height: 1.4;
 }
 
-.wdh-inf-tree li a:hover {
+.wdh-inf-tree li a:hover,
+.wdh-tree-folder:hover {
     opacity: 1;
     background: var(--hover-bg);
 }
 
+/* Folder items (no content, just toggles children) */
+.wdh-tree-folder {
+    display: block;
+    padding: 6px 16px 6px 24px;
+    color: var(--text);
+    font-size: 0.875rem;
+    opacity: 0.75;
+    line-height: 1.4;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+}
+
 /* Nesting indentation */
 .wdh-tree-children { padding-left: 0; }
-.wdh-tree-children li > a { padding-left: 40px; }
-.wdh-tree-children .wdh-tree-children li > a { padding-left: 56px; }
-.wdh-tree-children .wdh-tree-children .wdh-tree-children li > a { padding-left: 72px; }
+.wdh-tree-children li > a,
+.wdh-tree-children li > .wdh-tree-folder { padding-left: 40px; }
+.wdh-tree-children .wdh-tree-children li > a,
+.wdh-tree-children .wdh-tree-children li > .wdh-tree-folder { padding-left: 56px; }
+.wdh-tree-children .wdh-tree-children .wdh-tree-children li > a,
+.wdh-tree-children .wdh-tree-children .wdh-tree-children li > .wdh-tree-folder { padding-left: 72px; }
 
 /* Toggle chevron indent */
 .wdh-tree-children li > .wdh-tree-toggle { left: 24px; }

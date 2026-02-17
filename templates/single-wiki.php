@@ -1,4 +1,22 @@
 <?php
+// Redirect folder pages (no content + has children) to first child
+$current_post = get_post();
+if ($current_post && empty(trim($current_post->post_content))) {
+    $children = get_children([
+        'post_parent' => $current_post->ID,
+        'post_type'   => 'wiki',
+        'post_status' => 'publish',
+        'orderby'     => 'menu_order',
+        'order'       => 'ASC',
+        'numberposts' => 1,
+    ]);
+    if (!empty($children)) {
+        $first_child = reset($children);
+        wp_redirect(get_permalink($first_child->ID), 302);
+        exit;
+    }
+}
+
 get_header();
 
 $current_post_id = get_the_ID();
