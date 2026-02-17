@@ -26,7 +26,7 @@ class Wipress_MCP_Server {
 
         if (self::$project_scope) {
             $term = get_term_by('slug', self::$project_scope, 'wiki_project');
-            if (!$term) {
+            if (!$term || !Wipress_REST_API::is_project_visible($term)) {
                 return self::json_rpc_error(null, -32602, 'Project not found: ' . self::$project_scope);
             }
         }

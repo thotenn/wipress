@@ -127,5 +127,15 @@ The `assets/style.css` includes styles for Markdown output inside `.wdh-render`:
 - `h2`: top margin + bottom border separator
 - `h3`, `h4`: appropriate top margins
 - `code`: inline code with background highlight
-- `pre`: code blocks with border, padding, and horizontal scroll
+- `pre`: code blocks with border, padding, horizontal scroll, and `position: relative` for the copy button
 - `pre code`: removes inline code background inside code blocks
+
+## Code Block Copy Button
+
+Every `<pre>` element inside `.wdh-render` gets a copy-to-clipboard button injected via JavaScript:
+
+- Button (`.wdh-code-copy`) is positioned absolute in the top-right corner of the `<pre>` block
+- Hidden by default (`opacity: 0`), appears on hover over the `<pre>` element
+- Clicking copies the text content of the `<code>` element using `navigator.clipboard.writeText()`
+- Shows a checkmark icon for 2 seconds after copying, then reverts to the clipboard icon
+- Uses inline SVG icons (clipboard and checkmark), no external dependencies

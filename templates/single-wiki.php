@@ -97,6 +97,11 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                     Back to main menu
                 </button>
+                <div class="wdh-search" data-search-url="<?php echo esc_url(rest_url('wipress/v1/search')); ?>" data-project="<?php echo esc_attr($project->slug); ?>">
+                    <svg class="wdh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" class="wdh-search-input" placeholder="Search..." autocomplete="off" />
+                    <div class="wdh-search-results"></div>
+                </div>
                 <?php echo Wipress_Walker::render_tree($sidebar_posts, $current_post_id); ?>
             </div>
             <nav id="wdh-drawer-sections-view" class="wdh-drawer-sections" style="display: none;">
@@ -115,6 +120,11 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
 
     <div class="wdh-inf-grid">
         <aside class="wdh-inf-sidebar-left">
+            <div class="wdh-search" data-search-url="<?php echo esc_url(rest_url('wipress/v1/search')); ?>" data-project="<?php echo esc_attr($project->slug); ?>">
+                <svg class="wdh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="wdh-search-input" placeholder="Search..." autocomplete="off" />
+                <div class="wdh-search-results"></div>
+            </div>
             <?php echo Wipress_Walker::render_tree($sidebar_posts, $current_post_id); ?>
         </aside>
 

@@ -17,6 +17,8 @@ http://your-site.com/?rest_route=/wipress/v1/endpoint
 - **Read endpoints** — public, no authentication required
 - **Write endpoints** — require `edit_posts` capability via WordPress Application Passwords (Basic Auth)
 
+> **Private projects**: Projects marked as private (via the "Public project" checkbox in admin) are excluded from all public read endpoints. Authenticated users with `edit_posts` capability can still access them.
+
 ### Setting Up Application Passwords
 
 1. Go to `wp-admin > Users > Your Profile`

@@ -9,7 +9,7 @@ class Wipress_Import_Export {
 
     public static function export_project_internal($project_slug) {
         $project = get_term_by('slug', $project_slug, 'wiki_project');
-        if (!$project) {
+        if (!$project || !Wipress_REST_API::is_project_visible($project)) {
             return new WP_Error('not_found', 'Project not found: ' . $project_slug, ['status' => 404]);
         }
 

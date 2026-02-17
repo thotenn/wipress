@@ -6,10 +6,13 @@ A wiki system for WordPress with hierarchical navigation, Markdown support, REST
 
 - **Hierarchical pages** — nest pages under parents to build a documentation tree
 - **Collapsible sidebar** — Tabby-style navigation with expand/collapse, auto-expands only the active branch
+- **Sidebar search** — search bar above the tree with debounced REST API calls, dropdown results, keyboard support
 - **Folder pages** — pages without content act as containers that toggle their children
 - **Table of Contents** — auto-generated from headings with active section tracking via IntersectionObserver
+- **Code copy button** — hover-to-reveal copy button on all code blocks
 - **Markdown block** — Gutenberg block with Write/Preview toggle, no build step required
 - **Projects & Sections** — organize docs by project (e.g., "My App") and section (e.g., "Docs", "API")
+- **Private projects** — toggle visibility per project; private projects only accessible to editors and administrators
 - **REST API** — full CRUD, tree navigation, search, and move operations
 - **MCP Server** — JSON-RPC 2.0 endpoint so AI assistants can read and write wiki content
 - **Dark mode** — automatic via `prefers-color-scheme`
@@ -56,8 +59,8 @@ Use standard WordPress blocks or the **Markdown** block:
 Visit any wiki page on the frontend. The layout includes:
 
 - Sticky header with project name and section tabs
-- Left sidebar with collapsible page tree
-- Main content area
+- Left sidebar with search bar and collapsible page tree
+- Main content area with code copy buttons on code blocks
 - Right sidebar with table of contents
 
 ### Example structure
@@ -196,8 +199,8 @@ wipress/
   templates/
     single-wiki.php              # Frontend template
   assets/
-    style.css                    # Frontend styles (365 lines)
-    script.js                    # TOC + sidebar toggle
+    style.css                    # Frontend styles
+    script.js                    # Search, code copy, TOC, sidebar toggle
     editor-order-panel.js        # Menu Order panel
   docs/context/
     overview.md                  # Architecture & concepts

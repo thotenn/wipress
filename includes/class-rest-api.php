@@ -104,13 +104,31 @@ class Wipress_REST_API {
         return ['html' => Wipress_Markdown::render($content)];
     }
 
+    // --- Project visibility ---
+
+    public static function is_project_visible($term) {
+        if (current_user_can('edit_posts')) return true;
+        if (is_numeric($term)) {
+            $term = get_term((int)$term, 'wiki_project');
+        }
+        if (!$term || is_wp_error($term)) return false;
+        $public = get_term_meta($term->term_id, '_wipress_public', true);
+        return $public === '' || $public === '1';
+    }
+
+    private static function is_post_project_visible($post) {
+        if (current_user_can('edit_posts')) return true;
+        $terms = wp_get_object_terms($post->ID, 'wiki_project');
+        return empty($terms) || self::is_project_visible($terms[0]);
+    }
+
     // --- Internal methods (reused by MCP) ---
 
     public static function list_projects_internal() {
         $terms = get_terms(['taxonomy' => 'wiki_project', 'hide_empty' => false]);
         if (is_wp_error($terms)) return [];
 
-        return array_map(function($t) {
+        $projects = array_map(function($t) {
             return [
                 'id'    => $t->term_id,
                 'slug'  => $t->slug,
@@ -118,6 +136,14 @@ class Wipress_REST_API {
                 'count' => $t->count,
             ];
         }, $terms);
+
+        if (!current_user_can('edit_posts')) {
+            $projects = array_values(array_filter($projects, function($p) {
+                return self::is_project_visible($p['id']);
+            }));
+        }
+
+        return $projects;
     }
 
     public static function list_sections_internal($project_slug = null) {
@@ -128,7 +154,7 @@ class Wipress_REST_API {
         foreach ($terms as $t) {
             if ($project_slug) {
                 $project = get_term_by('slug', $project_slug, 'wiki_project');
-                if (!$project) continue;
+                if (!$project || !self::is_project_visible($project)) continue;
                 $posts = get_posts([
                     'post_type'      => 'wiki',
                     'posts_per_page' => 1,
@@ -152,6 +178,7 @@ class Wipress_REST_API {
     public static function get_tree_internal($project_slug) {
         $project = get_term_by('slug', $project_slug, 'wiki_project');
         if (!$project) return new WP_Error('not_found', 'Project not found', ['status' => 404]);
+        if (!self::is_project_visible($project)) return new WP_Error('not_found', 'Project not found', ['status' => 404]);
 
         $sections = self::list_sections_internal($project_slug);
         $tree = [];
@@ -228,12 +255,16 @@ class Wipress_REST_API {
         }
 
         $posts = get_posts($query_args);
-        return array_map([__CLASS__, 'format_page_summary'], $posts);
+        $posts = array_filter($posts, [__CLASS__, 'is_post_project_visible']);
+        return array_values(array_map([__CLASS__, 'format_page_summary'], $posts));
     }
 
     public static function get_page_internal($id) {
         $post = get_post($id);
         if (!$post || $post->post_type !== 'wiki') {
+            return new WP_Error('not_found', 'Page not found', ['status' => 404]);
+        }
+        if (!self::is_post_project_visible($post)) {
             return new WP_Error('not_found', 'Page not found', ['status' => 404]);
         }
         return self::format_page_full($post);
@@ -330,6 +361,8 @@ class Wipress_REST_API {
         }
 
         $posts = get_posts($args);
+        $posts = array_filter($posts, [__CLASS__, 'is_post_project_visible']);
+        $posts = array_values($posts);
         return array_map(function($p) use ($query) {
             $summary = self::format_page_summary($p);
             // Add excerpt with search context

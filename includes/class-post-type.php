@@ -11,6 +11,10 @@ class Wipress_Post_Type {
         add_filter('request', [__CLASS__, 'filter_request']);
         add_action('enqueue_block_editor_assets', [__CLASS__, 'register_order_panel']);
         add_action('wiki_project_edit_form_fields', [__CLASS__, 'render_mcp_info_fields'], 10, 2);
+        add_action('wiki_project_add_form_fields', [__CLASS__, 'render_visibility_add_field']);
+        add_action('wiki_project_edit_form_fields', [__CLASS__, 'render_visibility_edit_field'], 3, 2);
+        add_action('created_wiki_project', [__CLASS__, 'save_visibility_field']);
+        add_action('edited_wiki_project', [__CLASS__, 'save_visibility_field']);
         add_action('wiki_project_edit_form_fields', [__CLASS__, 'render_import_export_fields'], 5, 2);
         add_filter('manage_edit-wiki_project_columns', [__CLASS__, 'add_project_columns']);
         add_filter('manage_wiki_project_custom_column', [__CLASS__, 'render_project_column'], 10, 3);
@@ -30,14 +34,48 @@ class Wipress_Post_Type {
         ]);
 
         register_taxonomy('wiki_project', 'wiki', [
-            'label'        => 'Proyectos',
+            'labels'       => [
+                'name'                       => 'Projects',
+                'singular_name'              => 'Project',
+                'search_items'               => 'Search Projects',
+                'all_items'                  => 'All Projects',
+                'parent_item'                => 'Parent Project',
+                'parent_item_colon'          => 'Parent Project:',
+                'edit_item'                  => 'Edit Project',
+                'view_item'                  => 'View Project',
+                'update_item'                => 'Update Project',
+                'add_new_item'               => 'Add New Project',
+                'new_item_name'              => 'New Project Name',
+                'not_found'                  => 'No projects found.',
+                'no_terms'                   => 'No projects',
+                'items_list_navigation'      => 'Projects list navigation',
+                'items_list'                 => 'Projects list',
+                'back_to_items'              => '&larr; Go to Projects',
+            ],
             'hierarchical' => true,
             'show_in_rest' => true,
             'rewrite'      => ['slug' => 'wiki-project'],
         ]);
 
         register_taxonomy('wiki_section', 'wiki', [
-            'label'        => 'Secciones',
+            'labels'       => [
+                'name'                       => 'Sections',
+                'singular_name'              => 'Section',
+                'search_items'               => 'Search Sections',
+                'all_items'                  => 'All Sections',
+                'parent_item'                => 'Parent Section',
+                'parent_item_colon'          => 'Parent Section:',
+                'edit_item'                  => 'Edit Section',
+                'view_item'                  => 'View Section',
+                'update_item'                => 'Update Section',
+                'add_new_item'               => 'Add New Section',
+                'new_item_name'              => 'New Section Name',
+                'not_found'                  => 'No sections found.',
+                'no_terms'                   => 'No sections',
+                'items_list_navigation'      => 'Sections list navigation',
+                'items_list'                 => 'Sections list',
+                'back_to_items'              => '&larr; Go to Sections',
+            ],
             'hierarchical' => true,
             'show_in_rest' => true,
             'rewrite'      => ['slug' => 'wiki-section'],
@@ -111,6 +149,37 @@ class Wipress_Post_Type {
         $query_vars['p'] = $post->ID;
 
         return $query_vars;
+    }
+
+    // --- Project visibility ---
+
+    public static function render_visibility_add_field($taxonomy) {
+        ?>
+        <div class="form-field">
+            <label><input type="checkbox" name="wipress_public" value="1" checked /> Public project</label>
+            <p class="description">Uncheck to make this project private. Private projects are only visible to editors and administrators.</p>
+        </div>
+        <?php
+    }
+
+    public static function render_visibility_edit_field($term, $taxonomy) {
+        $public = get_term_meta($term->term_id, '_wipress_public', true);
+        if ($public === '') $public = '1';
+        ?>
+        <tr class="form-field">
+            <th scope="row">Visibility</th>
+            <td>
+                <label><input type="checkbox" name="wipress_public" value="1" <?php checked($public, '1'); ?> /> Public project</label>
+                <p class="description">Uncheck to make this project private. Private projects are only visible to editors and administrators.</p>
+            </td>
+        </tr>
+        <?php
+    }
+
+    public static function save_visibility_field($term_id) {
+        if (!isset($_POST['_wpnonce'])) return;
+        $public = isset($_POST['wipress_public']) ? '1' : '0';
+        update_term_meta($term_id, '_wipress_public', $public);
     }
 
     // --- Import/Export UI ---

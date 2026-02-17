@@ -1,5 +1,134 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // --- Sidebar search ---
+    document.querySelectorAll('.wdh-search').forEach(function(container) {
+        var searchUrl = container.dataset.searchUrl;
+        var project = container.dataset.project;
+        var input = container.querySelector('.wdh-search-input');
+        var results = container.querySelector('.wdh-search-results');
+        var debounceTimer = null;
+        var controller = null;
+
+        function closeResults() {
+            results.classList.remove('is-open');
+        }
+
+        function openResults() {
+            if (results.children.length > 0) {
+                results.classList.add('is-open');
+            }
+        }
+
+        function renderResults(items) {
+            results.textContent = '';
+            if (items.length === 0) {
+                var empty = document.createElement('div');
+                empty.className = 'wdh-search-empty';
+                empty.textContent = 'No results found';
+                results.appendChild(empty);
+            } else {
+                items.forEach(function(item) {
+                    var a = document.createElement('a');
+                    a.className = 'wdh-search-result';
+                    a.href = item.url;
+                    var title = document.createElement('div');
+                    title.className = 'wdh-search-result-title';
+                    title.textContent = item.title;
+                    a.appendChild(title);
+                    if (item.excerpt) {
+                        var excerpt = document.createElement('div');
+                        excerpt.className = 'wdh-search-result-excerpt';
+                        excerpt.textContent = item.excerpt;
+                        a.appendChild(excerpt);
+                    }
+                    results.appendChild(a);
+                });
+            }
+            results.classList.add('is-open');
+        }
+
+        function doSearch(query) {
+            if (controller) controller.abort();
+            controller = new AbortController();
+
+            var loading = document.createElement('div');
+            loading.className = 'wdh-search-loading';
+            loading.textContent = 'Searching...';
+            results.textContent = '';
+            results.appendChild(loading);
+            results.classList.add('is-open');
+
+            fetch(searchUrl + '?q=' + encodeURIComponent(query) + '&project=' + encodeURIComponent(project), {
+                signal: controller.signal
+            })
+                .then(function(r) { return r.json(); })
+                .then(function(data) { renderResults(data); })
+                .catch(function(err) {
+                    if (err.name !== 'AbortError') {
+                        results.textContent = '';
+                        closeResults();
+                    }
+                });
+        }
+
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            var query = input.value.trim();
+            if (query.length < 2) {
+                if (controller) controller.abort();
+                results.textContent = '';
+                closeResults();
+                return;
+            }
+            debounceTimer = setTimeout(function() { doSearch(query); }, 300);
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                input.value = '';
+                results.textContent = '';
+                closeResults();
+                input.blur();
+            }
+        });
+
+        input.addEventListener('focus', function() {
+            openResults();
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!container.contains(e.target)) {
+                closeResults();
+            }
+        });
+    });
+
+    // --- Code block copy button ---
+    var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    document.querySelectorAll('.wdh-render pre').forEach(function(pre) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'wdh-code-copy';
+        btn.innerHTML = copyIcon;
+        btn.setAttribute('aria-label', 'Copy code');
+        pre.appendChild(btn);
+
+        btn.addEventListener('click', function() {
+            var code = pre.querySelector('code');
+            var text = (code || pre).textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                btn.innerHTML = checkIcon;
+                btn.classList.add('is-copied');
+                setTimeout(function() {
+                    btn.innerHTML = copyIcon;
+                    btn.classList.remove('is-copied');
+                }, 2000);
+            });
+        });
+    });
+
     // --- Sidebar tree expand/collapse ---
     function toggleTreeItem(li) {
         var btn = li.querySelector(':scope > .wdh-tree-toggle');

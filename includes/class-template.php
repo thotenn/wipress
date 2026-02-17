@@ -23,7 +23,7 @@ class Wipress_Template {
         $project_slug = get_query_var('wipress_project_slug');
         if ($project_slug && !is_singular('wiki')) {
             $term = get_term_by('slug', $project_slug, 'wiki_project');
-            if ($term) {
+            if ($term && Wipress_REST_API::is_project_visible($term)) {
                 $first_page = self::get_project_first_page($term->term_id);
                 if ($first_page) {
                     wp_redirect(get_permalink($first_page), 302);
@@ -37,6 +37,14 @@ class Wipress_Template {
         }
 
         if (is_singular('wiki')) {
+            $post_id = get_queried_object_id();
+            $terms = wp_get_object_terms($post_id, 'wiki_project');
+            if (!empty($terms) && !Wipress_REST_API::is_project_visible($terms[0])) {
+                global $wp_query;
+                $wp_query->set_404();
+                status_header(404);
+                return $template;
+            }
             return WIPRESS_PATH . 'templates/single-wiki.php';
         }
         return $template;

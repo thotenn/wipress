@@ -7,7 +7,7 @@
     <?php wp_head(); ?>
 </head>
 <body <?php body_class('wipress-standalone'); ?>>
-<?php wp_body_open(); ?>
+<?php wp_body_open();
 
 $projects = Wipress_REST_API::list_projects_internal();
 ?>

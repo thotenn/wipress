@@ -17,6 +17,27 @@ The `wiki` CPT is registered with `hierarchical => true` and `page-attributes` s
 
 Both are hierarchical (like categories) and visible in the block editor sidebar.
 
+### Private Projects
+
+Projects have a "Public project" checkbox (term meta `_wipress_public`). When unchecked, the project and all its pages are hidden from:
+
+- The `/wiki/` archive page
+- REST API responses (`/projects`, `/pages`, `/search`)
+- MCP server (scoped and global endpoints)
+- Direct URL access (returns 404)
+
+Only users with `edit_posts` capability (Administrator, Editor, Author, Contributor) can see private projects. Subscribers and anonymous visitors cannot. Existing projects default to public.
+
+## Sidebar Search
+
+Above the tree navigation, a search bar allows users to search wiki content within the current project. The component (`.wdh-search`) is rendered in two places: the desktop sidebar and the mobile drawer.
+
+- Debounces input by 300ms, requires minimum 2 characters
+- Fetches `GET /wipress/v1/search?q={query}&project={slug}` via `fetch()` with `AbortController` (cancels in-flight requests)
+- Renders results as `<a>` links with title + excerpt using `textContent` (XSS-safe)
+- Keyboard: Escape closes and clears; click outside closes dropdown
+- Data attributes (`data-search-url`, `data-project`) pass REST API URL and project slug from PHP to JS
+
 ## Sidebar Tree (Walker)
 
 The left sidebar renders a hierarchical tree using `Wipress_Walker`, which extends WordPress's `Walker` class.

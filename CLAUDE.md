@@ -21,7 +21,7 @@ vendor/Parsedown.php     → Parsedown 1.7.4 bundled (MIT)
 blocks/markdown/         → Gutenberg block (no build, uses wp.element directly)
 templates/single-wiki.php → frontend 3-column layout
 templates/archive-wiki.php → project listing page (/wiki/)
-assets/                  → frontend CSS/JS + editor panel JS
+assets/                  → frontend CSS/JS (search, code copy, TOC, tree toggle) + editor panel JS
 ```
 
 ## Key Design Decisions
@@ -35,6 +35,9 @@ assets/                  → frontend CSS/JS + editor panel JS
 - **MCP tools delegate** to `Wipress_REST_API::*_internal()` static methods — no duplicated logic
 - **Application Passwords over HTTP** enabled via `wp_is_application_passwords_available` filter for local dev
 - **Block has no build step** — `index.js` uses `wp.element.createElement` directly, dependencies declared in `index.asset.php`
+- **Sidebar search** — each `.wdh-search` instance initialized independently (desktop + mobile drawer), uses REST endpoint `GET /wipress/v1/search`, 300ms debounce, AbortController for in-flight requests, `textContent` only (XSS-safe)
+- **Code copy button** — injected via JS into every `<pre>` inside `.wdh-render`, uses `navigator.clipboard.writeText()`, appears on hover
+- **Private projects** — term meta `_wipress_public` on `wiki_project` taxonomy. Default `'1'` (public). When `'0'`, project is hidden from non-editors. Checked via `Wipress_REST_API::is_project_visible($term)` in REST API, MCP, template loader, and archive page
 
 ## REST API
 
@@ -79,6 +82,12 @@ Write tools require Basic Auth (WordPress Application Passwords). Read tools are
 |-----|--------|-------------|
 | `_wipress_content_format` | `html`, `markdown` | Content rendering mode |
 
+## Term Meta
+
+| Key | Taxonomy | Values | Description |
+|-----|----------|--------|-------------|
+| `_wipress_public` | `wiki_project` | `'1'` (default), `'0'` | Project visibility. `'0'` = private (only visible to users with `edit_posts` capability) |
+
 ## Taxonomies
 
 | Taxonomy | Post Type | Purpose |
@@ -90,10 +99,14 @@ Write tools require Basic Auth (WordPress Application Passwords). Read tools are
 
 - **Adding a REST endpoint**: add route in `register_routes()`, create handler + `*_internal()` static method
 - **Adding an MCP tool**: add to `get_tools()` array, add case in `dispatch_tool()`, delegate to REST API internal
-- **Changing sidebar behavior**: modify `class-walker-wiki.php` (PHP classes) + `assets/script.js` (toggle logic) + `assets/style.css` (visual states)
+- **Changing sidebar behavior**: modify `class-walker-wiki.php` (PHP classes) + `assets/script.js` (toggle logic + search) + `assets/style.css` (visual states)
+- **Changing sidebar search**: modify search HTML in `templates/single-wiki.php` (two instances: desktop + mobile), JS in `assets/script.js` (search section), CSS in `assets/style.css` (`.wdh-search*` classes)
+- **Changing code block copy button**: modify JS in `assets/script.js` (code copy section), CSS in `assets/style.css` (`.wdh-code-copy` class)
+- **Changing project visibility**: checkbox saved as term meta `_wipress_public` in `class-post-type.php`, filtering via `is_project_visible()` in `class-rest-api.php`, enforced in `class-template.php` and `class-mcp-server.php`
 - **Changing template layout**: edit `templates/single-wiki.php`
 - **Adding block attributes**: update `blocks/markdown/block.json`, `index.js`, and `render.php`
 - **Version bumps**: update `WIPRESS_VERSION` in `wipress.php` to bust CSS/JS cache
+- **IMPORTANT — Always bump version**: after finishing ANY code modification (PHP, CSS, JS, templates), increment `WIPRESS_VERSION` in `wipress.php` before committing. Server-side caches (W3TC, CDN) differentiate cached assets by the `?ver=` query string, and stale versions will be served to some browsers if the version is not bumped
 
 ## Documentation
 

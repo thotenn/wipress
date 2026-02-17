@@ -64,8 +64,8 @@ Create pages under the folder:
 Visit any wiki page on the frontend. You'll see:
 
 - **Header** with project name and section tabs
-- **Left sidebar** with collapsible page tree
-- **Content** area with your page
+- **Left sidebar** with search bar and collapsible page tree
+- **Content** area with your page (code blocks have a copy button)
 - **Right sidebar** with table of contents (from headings)
 
 ## Example Structure

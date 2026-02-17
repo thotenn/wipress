@@ -9,7 +9,7 @@ WiPress is a WordPress plugin that turns your site into a documentation wiki wit
 WiPress is built on WordPress's native systems:
 
 - **Custom Post Type** (`wiki`) — hierarchical, so pages can have parents and children
-- **Two taxonomies** — `wiki_project` (groups of docs) and `wiki_section` (tabs within a project like "Docs", "API", "Blog")
+- **Two taxonomies** — `wiki_project` (groups of docs, with optional private visibility) and `wiki_section` (tabs within a project like "Docs", "API", "Blog")
 - **Walker class** — renders the sidebar tree with expand/collapse, active states, and folder detection
 - **Parsedown** — converts Markdown to HTML with WordPress sanitization
 - **REST API** — full CRUD + search under `wipress/v1`
@@ -41,7 +41,7 @@ plugins/wipress/
     archive-wiki.php                   # Project listing (/wiki/)
   assets/
     style.css                          # Frontend styles (light/dark)
-    script.js                          # TOC generation + sidebar toggle
+    script.js                          # Search, code copy, TOC, sidebar toggle
     editor-order-panel.js              # Menu Order panel for block editor
 ```
 
@@ -116,12 +116,13 @@ The single wiki template uses a 3-column grid:
 
 | Left Sidebar (260px) | Main Content (fluid) | Right Sidebar (240px) |
 |---|---|---|
-| Collapsible page tree | Page title + content | Table of Contents |
+| Search bar + collapsible page tree | Page title + content | Table of Contents |
 
 - **Header**: sticky, shows project name + section tabs
-- **Left sidebar**: sticky, scrollable, tree navigation with chevron toggles
+- **Left sidebar**: sticky, scrollable, search bar at the top + tree navigation with chevron toggles
+- **Main content**: code blocks include a hover-to-reveal copy button in the top-right corner
 - **Right sidebar**: sticky TOC generated from h2/h3/h4 headings, with active section tracking via IntersectionObserver
-- **Responsive**: TOC hides at 1100px, sidebar stacks at 768px
+- **Responsive**: TOC hides at 1100px, sidebar stacks at 768px; search bar also appears in mobile drawer
 
 ## Color Scheme
 
