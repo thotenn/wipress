@@ -4,6 +4,13 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+    (function(){
+        var t=localStorage.getItem('wipress-theme');
+        if(!t)t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+        document.documentElement.setAttribute('data-theme',t);
+    })();
+    </script>
     <?php wp_head(); ?>
 </head>
 <body <?php body_class('wipress-standalone'); ?>>
@@ -22,16 +29,54 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
 <div class="wdh-inf-container">
     <?php if ($project) : ?>
     <header class="wdh-inf-header">
-        <div class="wdh-inf-logo"><?php echo esc_html($project->name); ?></div>
-        <nav class="wdh-inf-tabs">
-            <?php foreach ($sections as $s) :
-                $active = ($section && $s['term']->term_id === $section->term_id) ? 'is-active' : '';
-            ?>
-                <a href="<?php echo esc_url($s['first_url']); ?>" class="<?php echo $active; ?>">
-                    <?php echo esc_html($s['term']->name); ?>
-                </a>
-            <?php endforeach; ?>
-        </nav>
+        <div class="wdh-inf-header-left">
+            <div class="wdh-inf-logo"><?php echo esc_html($project->name); ?></div>
+            <nav class="wdh-inf-tabs">
+                <?php foreach ($sections as $s) :
+                    $active = ($section && $s['term']->term_id === $section->term_id) ? 'is-active' : '';
+                ?>
+                    <a href="<?php echo esc_url($s['first_url']); ?>" class="<?php echo $active; ?>">
+                        <?php echo esc_html($s['term']->name); ?>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
+        </div>
+        <div class="wdh-inf-header-actions">
+            <button type="button" class="wdh-header-btn" id="wdh-btn-download-md"
+                    data-tooltip="Download as Markdown"
+                    data-api-url="<?php echo esc_url(rest_url('wipress/v1/pages/' . $current_post_id)); ?>"
+                    data-page-slug="<?php echo esc_attr(get_post()->post_name); ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+            </button>
+            <button type="button" class="wdh-header-btn" id="wdh-btn-copy-mcp"
+                    data-tooltip="Copy MCP URL"
+                    data-mcp-url="<?php echo esc_url(rest_url('wipress/v1/mcp/' . $project->slug)); ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="4 17 10 11 4 5"/>
+                    <line x1="12" y1="19" x2="20" y2="19"/>
+                </svg>
+            </button>
+            <button type="button" class="wdh-header-btn" id="wdh-btn-theme-toggle" data-tooltip="Toggle theme">
+                <svg class="wdh-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <svg class="wdh-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+        </div>
     </header>
     <?php endif; ?>
 
