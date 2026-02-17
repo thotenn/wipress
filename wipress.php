@@ -10,7 +10,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('WIPRESS_VERSION', '1.0.1');
+define('WIPRESS_VERSION', '1.0.2');
 define('WIPRESS_PATH', plugin_dir_path(__FILE__));
 define('WIPRESS_URL', plugin_dir_url(__FILE__));
 
