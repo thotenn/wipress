@@ -1,22 +1,4 @@
 <?php
-// Redirect folder pages (no content + has children) to first child
-$current_post = get_post();
-if ($current_post && empty(trim($current_post->post_content))) {
-    $children = get_children([
-        'post_parent' => $current_post->ID,
-        'post_type'   => 'wiki',
-        'post_status' => 'publish',
-        'orderby'     => 'menu_order',
-        'order'       => 'ASC',
-        'numberposts' => 1,
-    ]);
-    if (!empty($children)) {
-        $first_child = reset($children);
-        wp_redirect(get_permalink($first_child->ID), 302);
-        exit;
-    }
-}
-
 get_header();
 
 $current_post_id = get_the_ID();
@@ -53,7 +35,32 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
         <main class="wdh-inf-content">
             <article>
                 <h1><?php the_title(); ?></h1>
-                <div class="wdh-render"><?php the_content(); ?></div>
+                <?php if (empty(trim(get_post()->post_content))) :
+                    $children = get_posts([
+                        'post_parent'    => $current_post_id,
+                        'post_type'      => 'wiki',
+                        'post_status'    => 'publish',
+                        'orderby'        => 'menu_order',
+                        'order'          => 'ASC',
+                        'posts_per_page' => -1,
+                    ]);
+                    if (!empty($children)) : ?>
+                    <ul class="wdh-folder-listing">
+                        <?php foreach ($children as $child) : ?>
+                        <li>
+                            <a href="<?php echo esc_url(get_permalink($child)); ?>">
+                                <?php echo esc_html($child->post_title); ?>
+                            </a>
+                            <?php if ($child->post_excerpt) : ?>
+                                <span class="wdh-folder-desc"><?php echo esc_html($child->post_excerpt); ?></span>
+                            <?php endif; ?>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php endif; ?>
+                <?php else : ?>
+                    <div class="wdh-render"><?php the_content(); ?></div>
+                <?php endif; ?>
             </article>
         </main>
 

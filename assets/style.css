@@ -251,6 +251,41 @@ body {
     padding: 0;
 }
 
+/* --- Folder listing (pages without content) --- */
+.wdh-folder-listing {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.wdh-folder-listing li {
+    border-bottom: 1px solid var(--border);
+}
+
+.wdh-folder-listing li:last-child {
+    border-bottom: none;
+}
+
+.wdh-folder-listing li a {
+    display: block;
+    padding: 12px 0;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.wdh-folder-listing li a:hover {
+    text-decoration: underline;
+}
+
+.wdh-folder-desc {
+    display: block;
+    padding-bottom: 12px;
+    font-size: 0.875rem;
+    opacity: 0.6;
+}
+
 /* --- Sidebar right (TOC) --- */
 .wdh-inf-sidebar-right {
     padding: 48px 16px;

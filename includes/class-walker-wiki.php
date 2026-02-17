@@ -30,7 +30,7 @@ class Wipress_Walker extends Walker {
 
     public function start_el(&$output, $post, $depth = 0, $args = [], $current_object_id = 0) {
         $classes = [];
-        $has_children = !empty($args['has_children']);
+        $has_children = $this->has_children;
         $is_active = ($post->ID === $this->current_post_id);
         $is_ancestor = in_array($post->ID, $this->ancestors);
         $is_folder = $has_children && empty(trim($post->post_content));
@@ -40,7 +40,8 @@ class Wipress_Walker extends Walker {
         if ($is_active) $classes[] = 'active';
         if ($is_ancestor) $classes[] = 'ancestor';
 
-        $expanded = ($is_active || $is_ancestor) ? 'expanded' : 'collapsed';
+        // Only ancestors expand — the active item stays collapsed until user clicks
+        $expanded = $is_ancestor ? 'expanded' : 'collapsed';
         if ($has_children) $classes[] = $expanded;
 
         $class_str = implode(' ', $classes);
