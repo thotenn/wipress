@@ -30,8 +30,11 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
     <?php if ($project) : ?>
     <header class="wdh-inf-header">
         <div class="wdh-inf-header-left">
+            <button type="button" class="wdh-header-btn wdh-mobile-only" id="wdh-hamburger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
             <a href="<?php echo esc_url(home_url('/wiki/' . $project->slug . '/')); ?>" class="wdh-inf-logo"><?php echo esc_html($project->name); ?></a>
-            <nav class="wdh-inf-tabs">
+            <nav class="wdh-inf-tabs wdh-desktop-only">
                 <?php foreach ($sections as $s) :
                     $active = ($section && $s['term']->term_id === $section->term_id) ? 'is-active' : '';
                 ?>
@@ -41,9 +44,9 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
                 <?php endforeach; ?>
             </nav>
         </div>
-        <a href="<?php echo esc_url(home_url('/')); ?>" class="wdh-inf-site-title"><?php echo esc_html(get_bloginfo('name')); ?></a>
+        <a href="<?php echo esc_url(home_url('/')); ?>" class="wdh-inf-site-title wdh-desktop-only"><?php echo esc_html(get_bloginfo('name')); ?></a>
         <div class="wdh-inf-header-actions">
-            <button type="button" class="wdh-header-btn" id="wdh-btn-download-md"
+            <button type="button" class="wdh-header-btn wdh-desktop-only" id="wdh-btn-download-md"
                     data-tooltip="Download as Markdown"
                     data-api-url="<?php echo esc_url(rest_url('wipress/v1/pages/' . $current_post_id)); ?>"
                     data-page-slug="<?php echo esc_attr(get_post()->post_name); ?>">
@@ -53,7 +56,7 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
             </button>
-            <button type="button" class="wdh-header-btn" id="wdh-btn-copy-mcp"
+            <button type="button" class="wdh-header-btn wdh-desktop-only" id="wdh-btn-copy-mcp"
                     data-tooltip="Copy MCP URL"
                     data-mcp-url="<?php echo esc_url(rest_url('wipress/v1/mcp/' . $project->slug)); ?>">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -79,6 +82,35 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
             </button>
         </div>
     </header>
+
+    <div class="wdh-mobile-drawer" id="wdh-mobile-drawer">
+        <div class="wdh-drawer-overlay"></div>
+        <div class="wdh-drawer-panel">
+            <div class="wdh-drawer-header">
+                <a href="<?php echo esc_url(home_url('/wiki/' . $project->slug . '/')); ?>" class="wdh-inf-logo"><?php echo esc_html($project->name); ?></a>
+                <button type="button" class="wdh-drawer-close" id="wdh-drawer-close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div id="wdh-drawer-tree-view">
+                <button type="button" class="wdh-drawer-back" id="wdh-drawer-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back to main menu
+                </button>
+                <?php echo Wipress_Walker::render_tree($sidebar_posts, $current_post_id); ?>
+            </div>
+            <nav id="wdh-drawer-sections-view" class="wdh-drawer-sections" style="display: none;">
+                <?php foreach ($sections as $s) :
+                    $is_current = ($section && $s['term']->term_id === $section->term_id);
+                ?>
+                <a href="<?php echo esc_url($s['first_url']); ?>"
+                   class="<?php echo $is_current ? 'is-current' : ''; ?>">
+                    <?php echo esc_html($s['term']->name); ?>
+                </a>
+                <?php endforeach; ?>
+            </nav>
+        </div>
+    </div>
     <?php endif; ?>
 
     <div class="wdh-inf-grid">

@@ -184,6 +184,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- Mobile drawer ---
+    var hamburger = document.getElementById('wdh-hamburger');
+    var drawer = document.getElementById('wdh-mobile-drawer');
+    var drawerClose = document.getElementById('wdh-drawer-close');
+    var drawerOverlay = drawer ? drawer.querySelector('.wdh-drawer-overlay') : null;
+    var drawerBack = document.getElementById('wdh-drawer-back');
+    var drawerTreeView = document.getElementById('wdh-drawer-tree-view');
+    var drawerSectionsView = document.getElementById('wdh-drawer-sections-view');
+
+    function openDrawer() {
+        if (!drawer) return;
+        drawer.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        // Always start on tree view
+        if (drawerTreeView) drawerTreeView.style.display = '';
+        if (drawerSectionsView) drawerSectionsView.style.display = 'none';
+    }
+
+    function closeDrawer() {
+        if (!drawer) return;
+        drawer.classList.remove('is-open');
+        document.body.style.overflow = '';
+    }
+
+    if (hamburger) hamburger.addEventListener('click', openDrawer);
+    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+
+    if (drawerBack) {
+        drawerBack.addEventListener('click', function() {
+            if (drawerTreeView) drawerTreeView.style.display = 'none';
+            if (drawerSectionsView) drawerSectionsView.style.display = '';
+        });
+    }
+
+    // In sections view: clicking the current section goes back to tree view
+    if (drawerSectionsView) {
+        drawerSectionsView.querySelectorAll('a.is-current').forEach(function(a) {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (drawerTreeView) drawerTreeView.style.display = '';
+                if (drawerSectionsView) drawerSectionsView.style.display = 'none';
+            });
+        });
+    }
+
     // --- Helpers ---
 
     function extractMarkdownFromBlocks(content) {
