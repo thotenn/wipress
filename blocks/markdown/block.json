@@ -1,0 +1,22 @@
+{
+    "apiVersion": 3,
+    "name": "wipress/markdown",
+    "title": "Markdown",
+    "category": "text",
+    "icon": "editor-code",
+    "description": "Write content in Markdown format.",
+    "supports": {
+        "html": false,
+        "multiple": true
+    },
+    "attributes": {
+        "content": {
+            "type": "string",
+            "default": ""
+        }
+    },
+    "textdomain": "wipress",
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./editor.css",
+    "render": "file:./render.php"
+}
