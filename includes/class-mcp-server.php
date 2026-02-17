@@ -209,6 +209,27 @@ class Wipress_MCP_Server {
                 'required' => ['query'],
             ],
         ];
+        $tools['wiki_export_project'] = [
+            'description' => $scoped
+                ? 'Export this project as a complete JSON structure with all sections and pages'
+                : 'Export a wiki project as a complete JSON structure with all sections and pages',
+            'inputSchema' => $scoped
+                ? ['type' => 'object', 'properties' => []]
+                : ['type' => 'object', 'properties' => [
+                    'project' => ['type' => 'string', 'description' => 'Project slug to export'],
+                ], 'required' => ['project']],
+        ];
+        $tools['wiki_import_project'] = [
+            'description' => 'Import a wiki project from a JSON structure. Creates project, sections and all pages.',
+            'inputSchema' => [
+                'type' => 'object',
+                'properties' => [
+                    'data' => ['type' => 'object', 'description' => 'Export data with project, sections and pages'],
+                    'mode' => ['type' => 'string', 'enum' => ['replace', 'merge'], 'description' => 'Import mode: replace (delete existing pages first) or merge (add to existing). Default: replace'],
+                ],
+                'required' => ['data'],
+            ],
+        ];
 
         return $tools;
     }
@@ -218,7 +239,7 @@ class Wipress_MCP_Server {
         $arguments = $params['arguments'] ?? [];
 
         // Write operations require authentication
-        $write_tools = ['wiki_create_page', 'wiki_update_page', 'wiki_delete_page', 'wiki_move_page'];
+        $write_tools = ['wiki_create_page', 'wiki_update_page', 'wiki_delete_page', 'wiki_move_page', 'wiki_import_project'];
         if (in_array($tool_name, $write_tools) && !current_user_can('edit_posts')) {
             return self::json_rpc_response($id, [
                 'content' => [['type' => 'text', 'text' => 'Error: Authentication required for write operations']],
@@ -282,6 +303,12 @@ class Wipress_MCP_Server {
 
             case 'wiki_search':
                 return Wipress_REST_API::search_internal($args['query'] ?? '', $args['project'] ?? null);
+
+            case 'wiki_export_project':
+                return Wipress_Import_Export::export_project_internal($args['project'] ?? '');
+
+            case 'wiki_import_project':
+                return Wipress_Import_Export::import_project_internal($args['data'] ?? [], $args['mode'] ?? 'replace');
 
             default:
                 return new WP_Error('unknown_tool', "Unknown tool: $name");

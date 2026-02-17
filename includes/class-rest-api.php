@@ -75,6 +75,20 @@ class Wipress_REST_API {
             'permission_callback' => '__return_true',
         ]);
 
+        // Export
+        register_rest_route($ns, '/projects/(?P<slug>[a-zA-Z0-9_-]+)/export', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'handle_export_project'],
+            'permission_callback' => '__return_true',
+        ]);
+
+        // Import
+        register_rest_route($ns, '/import', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'handle_import_project'],
+            'permission_callback' => function() { return current_user_can('edit_posts'); },
+        ]);
+
         // Legacy endpoint
         register_rest_route('wiki-devhub/v1', '/publish', [
             'methods'             => 'POST',
@@ -333,7 +347,7 @@ class Wipress_REST_API {
 
     // --- Helpers ---
 
-    private static function set_taxonomies($post_id, $data) {
+    public static function set_taxonomies($post_id, $data) {
         if (!empty($data['project'])) {
             $slug = sanitize_title($data['project']);
             $term = term_exists($slug, 'wiki_project') ?: wp_insert_term($slug, 'wiki_project');
@@ -432,6 +446,22 @@ class Wipress_REST_API {
             return new WP_Error('missing_query', 'Search query is required', ['status' => 400]);
         }
         return rest_ensure_response(self::search_internal($query, $request->get_param('project')));
+    }
+
+    // --- Export / Import ---
+
+    public static function handle_export_project($request) {
+        $result = Wipress_Import_Export::export_project_internal($request['slug']);
+        if (is_wp_error($result)) return $result;
+        return rest_ensure_response($result);
+    }
+
+    public static function handle_import_project($request) {
+        $data = $request->get_json_params();
+        $mode = $request->get_param('mode') ?: 'replace';
+        $result = Wipress_Import_Export::import_project_internal($data, $mode);
+        if (is_wp_error($result)) return $result;
+        return rest_ensure_response($result);
     }
 
     // --- Legacy ---

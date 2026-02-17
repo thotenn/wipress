@@ -21,6 +21,7 @@ require_once WIPRESS_PATH . 'includes/class-template.php';
 require_once WIPRESS_PATH . 'includes/class-markdown.php';
 require_once WIPRESS_PATH . 'includes/class-rest-api.php';
 require_once WIPRESS_PATH . 'includes/class-mcp-server.php';
+require_once WIPRESS_PATH . 'includes/class-import-export.php';
 
 // Allow Application Passwords over HTTP in local dev
 add_filter('wp_is_application_passwords_available', '__return_true');
@@ -31,6 +32,7 @@ Wipress_Template::init();
 Wipress_Markdown::init();
 Wipress_REST_API::init();
 Wipress_MCP_Server::init();
+Wipress_Import_Export::init();
 
 // Register markdown block
 add_action('init', function() {
