@@ -41,7 +41,8 @@ plugins/wipress/
     archive-wiki.php                   # Project listing (/wiki/)
   assets/
     style.css                          # Frontend styles (light/dark)
-    script.js                          # Search, code copy, TOC, sidebar toggle
+    script.js                          # Search, code copy, TOC, sidebar toggle, heading anchors, Cmd+K
+  build.sh                             # Zip build script for distribution
     editor-order-panel.js              # Menu Order panel for block editor
 ```
 

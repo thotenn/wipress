@@ -21,7 +21,8 @@ vendor/Parsedown.php     → Parsedown 1.7.4 bundled (MIT)
 blocks/markdown/         → Gutenberg block (no build, uses wp.element directly)
 templates/single-wiki.php → frontend 3-column layout
 templates/archive-wiki.php → project listing page (/wiki/)
-assets/                  → frontend CSS/JS (search, code copy, TOC, tree toggle) + editor panel JS
+assets/                  → frontend CSS/JS (search, code copy, TOC, tree toggle, Prism.js theming) + editor panel JS
+build.sh                 → zip build script for distribution (excludes .git/, docs/, CLAUDE.md, README.md)
 ```
 
 ## Key Design Decisions
@@ -38,6 +39,11 @@ assets/                  → frontend CSS/JS (search, code copy, TOC, tree toggl
 - **Sidebar search** — each `.wdh-search` instance initialized independently (desktop + mobile drawer), uses REST endpoint `GET /wipress/v1/search`, 300ms debounce, AbortController for in-flight requests, `textContent` only (XSS-safe)
 - **Code copy button** — injected via JS into every `<pre>` inside `.wdh-render`, uses `navigator.clipboard.writeText()`, appears on hover
 - **Private projects** — term meta `_wipress_public` on `wiki_project` taxonomy. Default `'1'` (public). When `'0'`, project is hidden from non-editors. Checked via `Wipress_REST_API::is_project_visible($term)` in REST API, MCP, template loader, and archive page
+- **Breadcrumbs** — built from `get_post_ancestors()`, shows Project > Ancestor > Current Page
+- **Prev/next navigation** — `get_prev_next()` flattens the sidebar tree and finds adjacent pages. Displayed at bottom of article
+- **Heading anchor links** — `#` symbol appended to h2/h3/h4 via JS, visible on hover, click scrolls and updates URL hash
+- **Syntax highlighting** — Prism.js loaded from CDN with autoloader plugin. Token colors defined in plugin CSS with light/dark theme variants
+- **Cmd/Ctrl+K shortcut** — focuses sidebar search input; on mobile opens drawer first then focuses search after transition
 
 ## REST API
 
@@ -106,6 +112,10 @@ Write tools require Basic Auth (WordPress Application Passwords). Read tools are
 - **Changing template layout**: edit `templates/single-wiki.php`
 - **Adding block attributes**: update `blocks/markdown/block.json`, `index.js`, and `render.php`
 - **Version bumps**: update `WIPRESS_VERSION` in `wipress.php` to bust CSS/JS cache
+- **Changing breadcrumbs/prev-next**: modify HTML in `templates/single-wiki.php`, helpers in `class-template.php` (`get_prev_next`, `flatten_tree`), CSS in `assets/style.css` (`.wdh-breadcrumbs`, `.wdh-prev-next*`)
+- **Changing heading anchors**: modify JS in `assets/script.js` (TOC generation section, `.wdh-heading-anchor`), CSS in `assets/style.css`
+- **Changing syntax highlighting**: token colors in `assets/style.css` (`.token.*` rules with `[data-theme="light"]` variants), Prism.js CDN URLs in `class-template.php` (`enqueue_assets`)
+- **Building for distribution**: run `./build.sh` — creates `wipress-{version}.zip` excluding dev files
 - **IMPORTANT — Always bump version**: after finishing ANY code modification (PHP, CSS, JS, templates), increment `WIPRESS_VERSION` in `wipress.php` before committing. Server-side caches (W3TC, CDN) differentiate cached assets by the `?ver=` query string, and stale versions will be served to some browsers if the version is not bumped
 
 ## Documentation

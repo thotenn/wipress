@@ -90,6 +90,36 @@ A folder page has children but no content (`post_content` is empty). In the side
 
 If a user navigates to a folder URL directly (e.g., `/wiki/getting-started/`), the template shows the page title and a list of child page links.
 
+## Breadcrumbs
+
+Above the page title, breadcrumb navigation shows the path from project root to the current page:
+
+**Project Name** > **Ancestor Page** > **Current Page**
+
+- Built from `get_post_ancestors()` (reversed to show root-first order)
+- Project link points to `/wiki/{project-slug}/`
+- Ancestor pages are clickable links
+- Current page is plain text (no link)
+- Uses chevron SVG separator (`>`)
+
+## Prev/Next Navigation
+
+At the bottom of each article, prev/next links help readers navigate sequentially through the sidebar tree:
+
+- `Wipress_Template::get_prev_next($posts, $current_post_id)` flattens the sidebar tree into a linear list using `flatten_tree()` (depth-first traversal respecting `menu_order`)
+- Finds the current page index, returns adjacent pages
+- Previous link on the left, next link on the right
+- Each link shows a label ("Previous"/"Next") with arrow icon and the page title
+- On mobile, links stack vertically
+
+## Last Updated Date
+
+A "Last updated on {date}" line appears at the bottom of each article, before the prev/next navigation. Uses `get_the_modified_date('F j, Y')`.
+
+## Keyboard Shortcut
+
+**Cmd/Ctrl+K** focuses the sidebar search input. On mobile (viewport <= 768px), it first opens the drawer, then focuses the search input after the drawer transition completes (300ms delay).
+
 ## Table of Contents (Right Sidebar)
 
 The TOC is generated client-side by `assets/script.js`:
@@ -108,6 +138,25 @@ Uses `IntersectionObserver` (no scroll listener) with `rootMargin: '0px 0px -70%
 - Clicking a TOC link smooth-scrolls to the heading and updates `location.hash` via `history.replaceState`
 
 If the page has no headings, the TOC container is hidden entirely.
+
+### Heading Anchor Links
+
+Each h2, h3, h4 heading gets a `#` anchor link appended (class `.wdh-heading-anchor`):
+
+- Hidden by default (`opacity: 0`), visible on heading hover
+- Clicking scrolls smoothly to the heading and updates `location.hash` via `history.replaceState`
+- Allows users to share direct links to specific sections
+
+## Syntax Highlighting
+
+Code blocks use **Prism.js** loaded from CDN:
+
+- `prism.min.js` — core library
+- `prism-autoloader.min.js` — automatically loads language grammars on demand (no need to bundle all languages)
+
+Only loaded on singular wiki pages (`is_singular('wiki')`), enqueued in `Wipress_Template::enqueue_assets()`.
+
+Token colors are defined in the plugin's `style.css` (not Prism's default theme) with separate color schemes for light and dark themes using `[data-theme="light"]` selectors. The dark theme uses One Dark-inspired colors; the light theme uses One Light-inspired colors.
 
 ## Menu Order in Block Editor
 

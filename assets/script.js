@@ -195,6 +195,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 h.id = slug;
 
+                // Add anchor link to heading
+                var anchor = document.createElement('a');
+                anchor.className = 'wdh-heading-anchor';
+                anchor.href = '#' + slug;
+                anchor.textContent = '#';
+                anchor.setAttribute('aria-label', 'Link to this section');
+                anchor.addEventListener('click', function(ev) {
+                    ev.preventDefault();
+                    var t = document.getElementById(this.getAttribute('href').slice(1));
+                    if (t) {
+                        t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        history.replaceState(null, '', this.getAttribute('href'));
+                    }
+                });
+                h.appendChild(anchor);
+
                 var a = document.createElement('a');
                 a.href = '#' + slug;
                 a.textContent = h.textContent;
@@ -358,6 +374,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // --- Cmd/Ctrl+K shortcut to focus search ---
+    document.addEventListener('keydown', function(e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            var isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                openDrawer();
+                // Focus mobile drawer search after drawer opens
+                setTimeout(function() {
+                    var drawerSearch = document.querySelector('#wdh-drawer-tree-view .wdh-search-input');
+                    if (drawerSearch) drawerSearch.focus();
+                }, 300);
+            } else {
+                var desktopSearch = document.querySelector('.wdh-inf-sidebar-left .wdh-search-input');
+                if (desktopSearch) desktopSearch.focus();
+            }
+        }
+    });
 
     // --- Helpers ---
 

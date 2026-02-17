@@ -24,6 +24,7 @@ $section = $section_terms ? $section_terms[0] : null;
 
 $sections = $project ? Wipress_Template::get_project_sections($project->term_id) : [];
 $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($project->term_id, $section->term_id) : [];
+$prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_posts, $current_post_id) : ['prev' => null, 'next' => null];
 ?>
 
 <div class="wdh-inf-container">
@@ -130,6 +131,21 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
 
         <main class="wdh-inf-content">
             <article>
+                <?php
+                $ancestors = array_reverse(get_post_ancestors($current_post_id));
+                if ($project || !empty($ancestors)) : ?>
+                <nav class="wdh-breadcrumbs" aria-label="Breadcrumb">
+                    <?php if ($project) : ?>
+                        <a href="<?php echo esc_url(home_url('/wiki/' . $project->slug . '/')); ?>"><?php echo esc_html($project->name); ?></a>
+                    <?php endif; ?>
+                    <?php foreach ($ancestors as $anc_id) : ?>
+                        <svg class="wdh-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <a href="<?php echo esc_url(get_permalink($anc_id)); ?>"><?php echo esc_html(get_the_title($anc_id)); ?></a>
+                    <?php endforeach; ?>
+                    <svg class="wdh-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    <span><?php the_title(); ?></span>
+                </nav>
+                <?php endif; ?>
                 <h1><?php the_title(); ?></h1>
                 <?php if (empty(trim(get_post()->post_content))) :
                     $children = get_posts([
@@ -157,7 +173,33 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
                 <?php else : ?>
                     <div class="wdh-render"><?php the_content(); ?></div>
                 <?php endif; ?>
+                <div class="wdh-last-updated">Last updated on <?php echo esc_html(get_the_modified_date('F j, Y')); ?></div>
             </article>
+
+            <?php if ($prev_next['prev'] || $prev_next['next']) : ?>
+            <nav class="wdh-prev-next" aria-label="Page navigation">
+                <?php if ($prev_next['prev']) : ?>
+                <a href="<?php echo esc_url(get_permalink($prev_next['prev'])); ?>" class="wdh-prev-next-link wdh-prev">
+                    <span class="wdh-prev-next-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Previous
+                    </span>
+                    <span class="wdh-prev-next-title"><?php echo esc_html($prev_next['prev']->post_title); ?></span>
+                </a>
+                <?php else : ?>
+                <span></span>
+                <?php endif; ?>
+                <?php if ($prev_next['next']) : ?>
+                <a href="<?php echo esc_url(get_permalink($prev_next['next'])); ?>" class="wdh-prev-next-link wdh-next">
+                    <span class="wdh-prev-next-label">
+                        Next
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </span>
+                    <span class="wdh-prev-next-title"><?php echo esc_html($prev_next['next']->post_title); ?></span>
+                </a>
+                <?php endif; ?>
+            </nav>
+            <?php endif; ?>
         </main>
 
         <aside class="wdh-inf-sidebar-right">

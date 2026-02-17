@@ -29,11 +29,12 @@
     --tooltip-text: #1a1a1b;
 }
 
-body {
+body.wipress-standalone {
     background: var(--bg) !important;
     color: var(--text) !important;
     margin: 0;
     font-family: -apple-system, system-ui, sans-serif;
+    overflow-x: hidden;
 }
 
 /* --- Header --- */
@@ -443,6 +444,8 @@ body {
     padding: 48px 60px;
     max-width: 860px;
     margin: 0 auto;
+    min-width: 0;
+    overflow-x: hidden;
 }
 
 .wdh-inf-content h1 {
@@ -587,6 +590,213 @@ body {
 
 .wdh-render li {
     margin: 4px 0;
+}
+
+/* --- Breadcrumbs --- */
+.wdh-breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+}
+
+.wdh-breadcrumbs a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.wdh-breadcrumbs a:hover {
+    color: var(--accent);
+}
+
+.wdh-breadcrumb-sep {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
+.wdh-breadcrumbs span {
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* --- Heading anchor links --- */
+.wdh-heading-anchor {
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0;
+    margin-left: 6px;
+    font-weight: 400;
+    transition: opacity 0.15s;
+}
+
+.wdh-render h2:hover .wdh-heading-anchor,
+.wdh-render h3:hover .wdh-heading-anchor,
+.wdh-render h4:hover .wdh-heading-anchor {
+    opacity: 1;
+}
+
+/* --- Last updated --- */
+.wdh-last-updated {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+/* --- Prev/Next navigation --- */
+.wdh-prev-next {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.wdh-prev-next-link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, background-color 0.15s;
+    max-width: 48%;
+}
+
+.wdh-prev-next-link:hover {
+    border-color: var(--accent);
+    background: var(--hover-bg);
+}
+
+.wdh-next {
+    margin-left: auto;
+    text-align: right;
+    align-items: flex-end;
+}
+
+.wdh-prev-next-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+}
+
+.wdh-prev-next-label svg {
+    width: 14px;
+    height: 14px;
+}
+
+.wdh-prev-next-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--accent);
+}
+
+/* --- Syntax highlighting (Prism.js token colors) --- */
+.wdh-render pre code .token.comment,
+.wdh-render pre code .token.prolog,
+.wdh-render pre code .token.doctype,
+.wdh-render pre code .token.cdata {
+    color: var(--text-muted);
+}
+
+.wdh-render pre code .token.punctuation {
+    color: var(--text);
+    opacity: 0.7;
+}
+
+.wdh-render pre code .token.property,
+.wdh-render pre code .token.tag,
+.wdh-render pre code .token.boolean,
+.wdh-render pre code .token.number,
+.wdh-render pre code .token.constant,
+.wdh-render pre code .token.symbol {
+    color: #c678dd;
+}
+
+.wdh-render pre code .token.selector,
+.wdh-render pre code .token.attr-name,
+.wdh-render pre code .token.string,
+.wdh-render pre code .token.char,
+.wdh-render pre code .token.builtin {
+    color: #98c379;
+}
+
+.wdh-render pre code .token.operator,
+.wdh-render pre code .token.entity,
+.wdh-render pre code .token.url {
+    color: #56b6c2;
+}
+
+.wdh-render pre code .token.atrule,
+.wdh-render pre code .token.attr-value,
+.wdh-render pre code .token.keyword {
+    color: #c678dd;
+}
+
+.wdh-render pre code .token.function,
+.wdh-render pre code .token.class-name {
+    color: #61afef;
+}
+
+.wdh-render pre code .token.regex,
+.wdh-render pre code .token.important,
+.wdh-render pre code .token.variable {
+    color: #d19a66;
+}
+
+[data-theme="light"] .wdh-render pre code .token.property,
+[data-theme="light"] .wdh-render pre code .token.tag,
+[data-theme="light"] .wdh-render pre code .token.boolean,
+[data-theme="light"] .wdh-render pre code .token.number,
+[data-theme="light"] .wdh-render pre code .token.constant,
+[data-theme="light"] .wdh-render pre code .token.symbol {
+    color: #8959a8;
+}
+
+[data-theme="light"] .wdh-render pre code .token.selector,
+[data-theme="light"] .wdh-render pre code .token.attr-name,
+[data-theme="light"] .wdh-render pre code .token.string,
+[data-theme="light"] .wdh-render pre code .token.char,
+[data-theme="light"] .wdh-render pre code .token.builtin {
+    color: #50a14f;
+}
+
+[data-theme="light"] .wdh-render pre code .token.operator,
+[data-theme="light"] .wdh-render pre code .token.entity,
+[data-theme="light"] .wdh-render pre code .token.url {
+    color: #0184bc;
+}
+
+[data-theme="light"] .wdh-render pre code .token.atrule,
+[data-theme="light"] .wdh-render pre code .token.attr-value,
+[data-theme="light"] .wdh-render pre code .token.keyword {
+    color: #8959a8;
+}
+
+[data-theme="light"] .wdh-render pre code .token.function,
+[data-theme="light"] .wdh-render pre code .token.class-name {
+    color: #4078f2;
+}
+
+[data-theme="light"] .wdh-render pre code .token.regex,
+[data-theme="light"] .wdh-render pre code .token.important,
+[data-theme="light"] .wdh-render pre code .token.variable {
+    color: #e45649;
 }
 
 /* --- Folder listing (pages without content) --- */
@@ -858,5 +1068,17 @@ body {
     .wdh-inf-content h1 {
         font-size: 1.75rem;
         margin-bottom: 24px;
+    }
+
+    .wdh-prev-next {
+        flex-direction: column;
+    }
+
+    .wdh-prev-next-link {
+        max-width: 100%;
+    }
+
+    .wdh-next {
+        margin-left: 0;
     }
 }
