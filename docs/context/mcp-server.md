@@ -4,17 +4,31 @@
 
 The [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) is an open protocol that allows AI assistants (like Claude, ChatGPT, etc.) to interact with external tools and data sources. WiPress implements an MCP server so LLMs can read, create, update, and manage wiki content.
 
-## Endpoint
+## Endpoints
+
+### Global (all projects)
 
 ```
 POST /wp-json/wipress/v1/mcp
 ```
 
-Or with query parameter:
+Returns 10 tools. The LLM can browse all projects, create pages in any project, etc.
+
+### Project-scoped
 
 ```
-POST /?rest_route=/wipress/v1/mcp
+POST /wp-json/wipress/v1/mcp/{project-slug}
 ```
+
+Returns 9 tools (no `wiki_list_projects`). All tools are automatically scoped to the specified project — the `project` parameter is removed from tool schemas and injected automatically. Resources only list the scoped project.
+
+This is useful for sharing a single-project MCP link with external developers or LLMs:
+
+```
+https://your-site.com/wp-json/wipress/v1/mcp/my-app
+```
+
+If the project doesn't exist, the server returns a JSON-RPC error immediately.
 
 ## Protocol
 
@@ -66,7 +80,7 @@ curl -X POST http://localhost:5580/wp-json/wipress/v1/mcp \
   "result": {
     "protocolVersion": "2024-11-05",
     "capabilities": { "tools": {} },
-    "serverInfo": { "name": "wipress", "version": "1.0.1" }
+    "serverInfo": { "name": "wipress", "version": "1.0.1" }  // or "wipress/my-app" if scoped
   }
 }
 ```
@@ -190,7 +204,7 @@ Get a wiki page by ID with full content.
 
 ### `wiki_create_page` (auth required)
 
-Create a new wiki page.
+Create a new wiki page. The project and section are created automatically if they do not exist yet.
 
 | Argument | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -308,13 +322,42 @@ Invalid requests return JSON-RPC errors:
 
 ## Configuring an MCP Client
 
-To connect an AI assistant to WiPress, configure it as an MCP server:
+### Global access (all projects, read + write)
 
 ```json
 {
   "mcpServers": {
     "wipress": {
-      "url": "http://localhost:5580/wp-json/wipress/v1/mcp",
+      "url": "https://your-site.com/wp-json/wipress/v1/mcp",
+      "headers": {
+        "Authorization": "Basic base64(username:app_password)"
+      }
+    }
+  }
+}
+```
+
+### Project-scoped (single project, read-only)
+
+```json
+{
+  "mcpServers": {
+    "my-app-docs": {
+      "url": "https://your-site.com/wp-json/wipress/v1/mcp/my-app"
+    }
+  }
+}
+```
+
+No auth needed for read-only access. The LLM can explore the tree, read pages, and search — all scoped to the project. The `project` parameter is injected automatically, so tools like `wiki_get_tree` require no arguments.
+
+### Project-scoped (single project, read + write)
+
+```json
+{
+  "mcpServers": {
+    "my-app-docs": {
+      "url": "https://your-site.com/wp-json/wipress/v1/mcp/my-app",
       "headers": {
         "Authorization": "Basic base64(username:app_password)"
       }
@@ -325,7 +368,7 @@ To connect an AI assistant to WiPress, configure it as an MCP server:
 
 ## Typical AI Workflow
 
-1. **Explore**: Call `wiki_list_projects` → `wiki_get_tree` to understand the structure
+1. **Explore**: Call `wiki_list_projects` → `wiki_get_tree` to understand the structure (or just `wiki_get_tree` if scoped)
 2. **Read**: Call `wiki_get_page` to read specific content
 3. **Search**: Call `wiki_search` to find relevant pages
 4. **Write**: Call `wiki_create_page` or `wiki_update_page` to add/modify content

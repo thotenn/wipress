@@ -70,14 +70,14 @@ Get the full navigation tree for a project, organized by sections.
         "title": "Getting Started",
         "slug": "getting-started",
         "menu_order": 0,
-        "url": "http://example.com/wiki/getting-started",
+        "url": "http://example.com/wiki/my-project/getting-started/",
         "children": [
           {
             "id": 18,
             "title": "Installation",
             "slug": "installation",
             "menu_order": 1,
-            "url": "http://example.com/wiki/getting-started/installation",
+            "url": "http://example.com/wiki/my-project/getting-started/installation/",
             "children": [ ... ]
           }
         ]
@@ -118,7 +118,7 @@ curl "http://localhost:5580/wp-json/wipress/v1/pages?project=my-project&section=
     "slug": "getting-started",
     "parent": 0,
     "menu_order": 0,
-    "url": "http://example.com/wiki/getting-started",
+    "url": "http://example.com/wiki/my-project/getting-started/",
     "project": "my-project",
     "section": "docs"
   }
@@ -137,7 +137,7 @@ Get a single page with full content.
   "slug": "for-linux-users",
   "parent": 18,
   "menu_order": 1,
-  "url": "http://example.com/wiki/getting-started/installation/for-linux-users",
+  "url": "http://example.com/wiki/my-project/getting-started/installation/for-linux-users/",
   "project": "my-project",
   "section": "docs",
   "content": "## Linux Installation\n\nFollow these steps...",
@@ -257,7 +257,7 @@ curl "http://localhost:5580/wp-json/wipress/v1/search?q=installation&project=my-
     "slug": "for-windows-users",
     "parent": 18,
     "menu_order": 2,
-    "url": "http://example.com/wiki/getting-started/installation/for-windows-users",
+    "url": "http://example.com/wiki/my-project/getting-started/installation/for-windows-users/",
     "project": "my-project",
     "section": "docs",
     "excerpt": "...## Windows Installation\n\nDownload the installer from the releases page..."
@@ -299,7 +299,7 @@ Backward-compatible endpoint from the original plugin. Creates or updates a page
 
 **Response:**
 ```json
-{ "success": true, "url": "http://example.com/wiki/page-title" }
+{ "success": true, "url": "http://example.com/wiki/project-slug/page-title/" }
 ```
 
 ## Workflows

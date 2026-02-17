@@ -5,19 +5,32 @@ class Wipress_MCP_Server {
 
     const PROTOCOL_VERSION = '2024-11-05';
 
+    private static $project_scope = null;
+
     public static function init() {
         add_action('rest_api_init', [__CLASS__, 'register_route']);
     }
 
     public static function register_route() {
-        register_rest_route('wipress/v1', '/mcp', [
+        $args = [
             'methods'             => 'POST',
             'callback'            => [__CLASS__, 'handle_request'],
             'permission_callback' => '__return_true',
-        ]);
+        ];
+        register_rest_route('wipress/v1', '/mcp', $args);
+        register_rest_route('wipress/v1', '/mcp/(?P<project>[a-zA-Z0-9_-]+)', $args);
     }
 
     public static function handle_request($request) {
+        self::$project_scope = $request->get_param('project') ?: null;
+
+        if (self::$project_scope) {
+            $term = get_term_by('slug', self::$project_scope, 'wiki_project');
+            if (!$term) {
+                return self::json_rpc_error(null, -32602, 'Project not found: ' . self::$project_scope);
+            }
+        }
+
         $body = $request->get_json_params();
 
         if (empty($body) || !isset($body['jsonrpc']) || $body['jsonrpc'] !== '2.0') {
@@ -30,15 +43,16 @@ class Wipress_MCP_Server {
 
         switch ($method) {
             case 'initialize':
+                $server_info = [
+                    'name'    => self::$project_scope ? 'wipress/' . self::$project_scope : 'wipress',
+                    'version' => WIPRESS_VERSION,
+                ];
                 return self::json_rpc_response($id, [
                     'protocolVersion' => self::PROTOCOL_VERSION,
                     'capabilities'    => [
                         'tools' => new stdClass,
                     ],
-                    'serverInfo' => [
-                        'name'    => 'wipress',
-                        'version' => WIPRESS_VERSION,
-                    ],
+                    'serverInfo' => $server_info,
                 ]);
 
             case 'notifications/initialized':
@@ -70,42 +84,49 @@ class Wipress_MCP_Server {
     }
 
     private static function get_tools() {
-        // Build tools array at runtime to avoid stdClass serialization issues
+        $scoped = self::$project_scope !== null;
         $tools = [];
 
-        $tools['wiki_list_projects'] = [
-            'description' => 'List all wiki projects',
-            'inputSchema' => ['type' => 'object', 'properties' => []],
-        ];
+        if (!$scoped) {
+            $tools['wiki_list_projects'] = [
+                'description' => 'List all wiki projects',
+                'inputSchema' => ['type' => 'object', 'properties' => []],
+            ];
+        }
         $tools['wiki_list_sections'] = [
-            'description' => 'List sections, optionally filtered by project',
-            'inputSchema' => [
-                'type' => 'object',
-                'properties' => [
+            'description' => $scoped
+                ? 'List sections in this project'
+                : 'List sections, optionally filtered by project',
+            'inputSchema' => $scoped
+                ? ['type' => 'object', 'properties' => []]
+                : ['type' => 'object', 'properties' => [
                     'project' => ['type' => 'string', 'description' => 'Project slug to filter by'],
-                ],
-            ],
+                ]],
         ];
         $tools['wiki_get_tree'] = [
-            'description' => 'Get the full navigation tree for a project',
-            'inputSchema' => [
-                'type' => 'object',
-                'properties' => [
+            'description' => $scoped
+                ? 'Get the full navigation tree for this project'
+                : 'Get the full navigation tree for a project',
+            'inputSchema' => $scoped
+                ? ['type' => 'object', 'properties' => []]
+                : ['type' => 'object', 'properties' => [
                     'project' => ['type' => 'string', 'description' => 'Project slug'],
-                ],
-                'required' => ['project'],
-            ],
+                ], 'required' => ['project']],
         ];
         $tools['wiki_list_pages'] = [
-            'description' => 'List wiki pages with optional filters',
+            'description' => $scoped
+                ? 'List wiki pages in this project with optional filters'
+                : 'List wiki pages with optional filters',
             'inputSchema' => [
                 'type' => 'object',
-                'properties' => [
-                    'project' => ['type' => 'string', 'description' => 'Filter by project slug'],
-                    'section' => ['type' => 'string', 'description' => 'Filter by section slug'],
-                    'parent'  => ['type' => 'integer', 'description' => 'Filter by parent page ID'],
-                    'search'  => ['type' => 'string', 'description' => 'Search query'],
-                ],
+                'properties' => array_merge(
+                    $scoped ? [] : ['project' => ['type' => 'string', 'description' => 'Filter by project slug']],
+                    [
+                        'section' => ['type' => 'string', 'description' => 'Filter by section slug'],
+                        'parent'  => ['type' => 'integer', 'description' => 'Filter by parent page ID'],
+                        'search'  => ['type' => 'string', 'description' => 'Search query'],
+                    ]
+                ),
             ],
         ];
         $tools['wiki_get_page'] = [
@@ -119,18 +140,24 @@ class Wipress_MCP_Server {
             ],
         ];
         $tools['wiki_create_page'] = [
-            'description' => 'Create a new wiki page',
+            'description' => $scoped
+                ? 'Create a new wiki page in this project. The section is created automatically if it does not exist yet.'
+                : 'Create a new wiki page. The project and section are created automatically if they do not exist yet.',
             'inputSchema' => [
                 'type' => 'object',
-                'properties' => [
-                    'title'          => ['type' => 'string', 'description' => 'Page title'],
-                    'content'        => ['type' => 'string', 'description' => 'Page content (markdown or html)'],
-                    'content_format' => ['type' => 'string', 'enum' => ['markdown', 'html'], 'description' => 'Content format'],
-                    'project'        => ['type' => 'string', 'description' => 'Project slug'],
-                    'section'        => ['type' => 'string', 'description' => 'Section name'],
-                    'parent'         => ['type' => 'integer', 'description' => 'Parent page ID'],
-                    'menu_order'     => ['type' => 'integer', 'description' => 'Sort order'],
-                ],
+                'properties' => array_merge(
+                    [
+                        'title'          => ['type' => 'string', 'description' => 'Page title'],
+                        'content'        => ['type' => 'string', 'description' => 'Page content (markdown or html)'],
+                        'content_format' => ['type' => 'string', 'enum' => ['markdown', 'html'], 'description' => 'Content format'],
+                    ],
+                    $scoped ? [] : ['project' => ['type' => 'string', 'description' => 'Project slug']],
+                    [
+                        'section'    => ['type' => 'string', 'description' => 'Section name'],
+                        'parent'     => ['type' => 'integer', 'description' => 'Parent page ID'],
+                        'menu_order' => ['type' => 'integer', 'description' => 'Sort order'],
+                    ]
+                ),
                 'required' => ['title', 'content'],
             ],
         ];
@@ -170,13 +197,15 @@ class Wipress_MCP_Server {
             ],
         ];
         $tools['wiki_search'] = [
-            'description' => 'Search wiki content',
+            'description' => $scoped
+                ? 'Search wiki content in this project'
+                : 'Search wiki content',
             'inputSchema' => [
                 'type' => 'object',
-                'properties' => [
-                    'query'   => ['type' => 'string', 'description' => 'Search query'],
-                    'project' => ['type' => 'string', 'description' => 'Limit search to project slug'],
-                ],
+                'properties' => array_merge(
+                    ['query' => ['type' => 'string', 'description' => 'Search query']],
+                    $scoped ? [] : ['project' => ['type' => 'string', 'description' => 'Limit search to project slug']]
+                ),
                 'required' => ['query'],
             ],
         ];
@@ -195,6 +224,11 @@ class Wipress_MCP_Server {
                 'content' => [['type' => 'text', 'text' => 'Error: Authentication required for write operations']],
                 'isError' => true,
             ]);
+        }
+
+        // Inject project scope into arguments
+        if (self::$project_scope) {
+            $arguments['project'] = self::$project_scope;
         }
 
         $result = self::dispatch_tool($tool_name, $arguments);
@@ -258,6 +292,7 @@ class Wipress_MCP_Server {
         $resources = [];
         $projects = Wipress_REST_API::list_projects_internal();
         foreach ($projects as $p) {
+            if (self::$project_scope && $p['slug'] !== self::$project_scope) continue;
             $resources[] = [
                 'uri'         => 'wiki://project/' . $p['slug'],
                 'name'        => $p['name'],

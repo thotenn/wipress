@@ -11,7 +11,7 @@ Single-plugin, class-per-concern, no build step:
 ```
 wipress.php              → bootstrap (defines + requires + init)
 includes/
-  class-post-type.php    → CPT 'wiki' (hierarchical) + taxonomies (wiki_project, wiki_section)
+  class-post-type.php    → CPT 'wiki' (hierarchical) + taxonomies + rewrite rules + permalink filter
   class-walker-wiki.php  → extends Walker, renders sidebar tree
   class-template.php     → template loading + sidebar data helpers
   class-markdown.php     → Parsedown wrapper + the_content filter
@@ -20,6 +20,7 @@ includes/
 vendor/Parsedown.php     → Parsedown 1.7.4 bundled (MIT)
 blocks/markdown/         → Gutenberg block (no build, uses wp.element directly)
 templates/single-wiki.php → frontend 3-column layout
+templates/archive-wiki.php → project listing page (/wiki/)
 assets/                  → frontend CSS/JS + editor panel JS
 ```
 
@@ -29,6 +30,8 @@ assets/                  → frontend CSS/JS + editor panel JS
 - **Only ancestors expand** in the sidebar tree — the active item itself stays collapsed
 - **Folder detection**: `has_children && empty(trim($post->post_content))` — renders `<span>` toggle instead of `<a>` link
 - **Markdown sanitization**: Parsedown with `setMarkupEscaped(false)` + `wp_kses_post()` — allows HTML like `<img>` but blocks `<script>`
+- **URL structure**: `/wiki/{project-slug}/{page-path}/` — custom rewrite rules, CPT uses `rewrite => false`
+- **Project-scoped MCP**: `/wp-json/wipress/v1/mcp/{project}` — auto-injects project into all tool calls, removes `project` from schemas
 - **MCP tools delegate** to `Wipress_REST_API::*_internal()` static methods — no duplicated logic
 - **Application Passwords over HTTP** enabled via `wp_is_application_passwords_available` filter for local dev
 - **Block has no build step** — `index.js` uses `wp.element.createElement` directly, dependencies declared in `index.asset.php`
@@ -51,13 +54,15 @@ Namespace: `wipress/v1`
 
 ## MCP Server
 
-Endpoint: `POST /wipress/v1/mcp` (JSON-RPC 2.0)
+Endpoints:
+- `POST /wipress/v1/mcp` — global (JSON-RPC 2.0), 10 tools
+- `POST /wipress/v1/mcp/{project-slug}` — project-scoped, 9 tools (no `wiki_list_projects`, `project` param auto-injected)
 
 Methods: `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`
 
 10 tools: `wiki_list_projects`, `wiki_list_sections`, `wiki_get_tree`, `wiki_list_pages`, `wiki_get_page`, `wiki_create_page`, `wiki_update_page`, `wiki_delete_page`, `wiki_move_page`, `wiki_search`
 
-Write tools require Basic Auth (WordPress Application Passwords).
+Write tools require Basic Auth (WordPress Application Passwords). Read tools are public — scoped endpoint can be shared without auth for documentation consumers.
 
 ## Conventions
 

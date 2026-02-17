@@ -130,19 +130,19 @@ See [rest-api.md](rest-api.md) for full endpoint documentation.
 
 ### Connect an AI Assistant
 
-Add to your MCP client configuration:
+For read-only access to a specific project (no auth needed):
 
 ```json
 {
   "mcpServers": {
-    "wipress": {
-      "url": "http://localhost:5580/wp-json/wipress/v1/mcp"
+    "my-app-docs": {
+      "url": "http://localhost:5580/wp-json/wipress/v1/mcp/my-app"
     }
   }
 }
 ```
 
-For write operations, add authentication header:
+For full read/write access to all projects:
 
 ```json
 {
@@ -159,11 +159,18 @@ For write operations, add authentication header:
 
 (The Authorization value is `base64("username:app_password")`)
 
+The project-scoped endpoint (`/mcp/my-app`) automatically filters all tools to that project — the LLM doesn't need to specify `project` in any tool call.
+
 ### Test Manually
 
 ```bash
-# Initialize
+# Initialize (global)
 curl -X POST http://localhost:5580/wp-json/wipress/v1/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+
+# Initialize (scoped to a project)
+curl -X POST http://localhost:5580/wp-json/wipress/v1/mcp/my-app \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
 
@@ -171,11 +178,6 @@ curl -X POST http://localhost:5580/wp-json/wipress/v1/mcp \
 curl -X POST http://localhost:5580/wp-json/wipress/v1/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
-
-# List projects via tool call
-curl -X POST http://localhost:5580/wp-json/wipress/v1/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"wiki_list_projects","arguments":{}}}'
 ```
 
 See [mcp-server.md](mcp-server.md) for full tool documentation.

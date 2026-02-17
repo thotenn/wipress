@@ -21,7 +21,7 @@ WiPress is built on WordPress's native systems:
 plugins/wipress/
   wipress.php                          # Bootstrap: constants, requires, init
   includes/
-    class-post-type.php                # CPT + taxonomies + editor panel
+    class-post-type.php                # CPT + taxonomies + rewrite rules + editor panel
     class-walker-wiki.php              # Hierarchical sidebar walker
     class-template.php                 # Template loading + sidebar data helpers
     class-markdown.php                 # Parsedown wrapper + content filter
@@ -37,7 +37,8 @@ plugins/wipress/
       render.php                       # Server-side render
       editor.css                       # Editor styles
   templates/
-    single-wiki.php                    # Frontend template
+    single-wiki.php                    # Single wiki page template
+    archive-wiki.php                   # Project listing (/wiki/)
   assets/
     style.css                          # Frontend styles (light/dark)
     script.js                          # TOC generation + sidebar toggle
@@ -54,6 +55,25 @@ Content is organized in two dimensions:
 - **Section** — a tab within a project (e.g., "Docs", "API Reference", "Changelog")
 
 Each wiki page belongs to one project and one section. The frontend header shows the project name and section tabs.
+
+### URL Structure
+
+URLs include the project slug:
+
+- `/wiki/` — archive page listing all projects
+- `/wiki/{project-slug}/` — redirects (302) to the project's first page
+- `/wiki/{project-slug}/{page-path}/` — individual wiki page
+
+Examples:
+
+```
+/wiki/                                          → project listing
+/wiki/my-app/                                   → redirect to first page
+/wiki/my-app/getting-started/                   → root page
+/wiki/my-app/getting-started/installation/      → child page
+```
+
+Custom rewrite rules handle the routing. The CPT uses `rewrite => false` and `has_archive => false` to avoid conflicts with WordPress's built-in URL handling.
 
 ### Page Hierarchy
 
