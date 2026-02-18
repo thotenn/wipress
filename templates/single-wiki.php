@@ -32,7 +32,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
     <header class="wdh-inf-header">
         <div class="wdh-inf-header-left">
             <button type="button" class="wdh-header-btn wdh-mobile-only" id="wdh-hamburger">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
             <a href="<?php echo esc_url(home_url('/wiki/' . $project->slug . '/')); ?>" class="wdh-inf-logo"><?php echo esc_html($project->name); ?></a>
             <nav class="wdh-inf-tabs wdh-desktop-only">
@@ -51,7 +51,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                     data-tooltip="Download as Markdown"
                     data-api-url="<?php echo esc_url(rest_url('wipress/v1/pages/' . $current_post_id)); ?>"
                     data-page-slug="<?php echo esc_attr(get_post()->post_name); ?>">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
@@ -60,13 +60,13 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
             <button type="button" class="wdh-header-btn wdh-desktop-only" id="wdh-btn-copy-mcp"
                     data-tooltip="Copy MCP URL"
                     data-mcp-url="<?php echo esc_url(rest_url('wipress/v1/mcp/' . $project->slug)); ?>">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="4 17 10 11 4 5"/>
                     <line x1="12" y1="19" x2="20" y2="19"/>
                 </svg>
             </button>
             <button type="button" class="wdh-header-btn" id="wdh-btn-theme-toggle" data-tooltip="Toggle theme">
-                <svg class="wdh-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="wdh-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="5"/>
                     <line x1="12" y1="1" x2="12" y2="3"/>
                     <line x1="12" y1="21" x2="12" y2="23"/>
@@ -77,7 +77,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                     <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                 </svg>
-                <svg class="wdh-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="wdh-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                 </svg>
             </button>
@@ -90,16 +90,16 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
             <div class="wdh-drawer-header">
                 <a href="<?php echo esc_url(home_url('/wiki/' . $project->slug . '/')); ?>" class="wdh-inf-logo"><?php echo esc_html($project->name); ?></a>
                 <button type="button" class="wdh-drawer-close" id="wdh-drawer-close">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
             <div id="wdh-drawer-tree-view">
                 <button type="button" class="wdh-drawer-back" id="wdh-drawer-back">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                     Back to main menu
                 </button>
                 <div class="wdh-search" data-search-url="<?php echo esc_url(rest_url('wipress/v1/search')); ?>" data-project="<?php echo esc_attr($project->slug); ?>">
-                    <svg class="wdh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <svg class="wdh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="text" class="wdh-search-input" placeholder="Search..." autocomplete="off" />
                     <div class="wdh-search-results"></div>
                 </div>
@@ -122,7 +122,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
     <div class="wdh-inf-grid">
         <aside class="wdh-inf-sidebar-left">
             <div class="wdh-search" data-search-url="<?php echo esc_url(rest_url('wipress/v1/search')); ?>" data-project="<?php echo esc_attr($project->slug); ?>">
-                <svg class="wdh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg class="wdh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" class="wdh-search-input" placeholder="Search..." autocomplete="off" />
                 <div class="wdh-search-results"></div>
             </div>
@@ -139,10 +139,10 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                         <a href="<?php echo esc_url(home_url('/wiki/' . $project->slug . '/')); ?>"><?php echo esc_html($project->name); ?></a>
                     <?php endif; ?>
                     <?php foreach ($ancestors as $anc_id) : ?>
-                        <svg class="wdh-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <svg class="wdh-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                         <a href="<?php echo esc_url(get_permalink($anc_id)); ?>"><?php echo esc_html(get_the_title($anc_id)); ?></a>
                     <?php endforeach; ?>
-                    <svg class="wdh-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg class="wdh-breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                     <span><?php the_title(); ?></span>
                 </nav>
                 <?php endif; ?>
@@ -181,7 +181,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                 <?php if ($prev_next['prev']) : ?>
                 <a href="<?php echo esc_url(get_permalink($prev_next['prev'])); ?>" class="wdh-prev-next-link wdh-prev">
                     <span class="wdh-prev-next-label">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                         Previous
                     </span>
                     <span class="wdh-prev-next-title"><?php echo esc_html($prev_next['prev']->post_title); ?></span>
@@ -193,7 +193,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                 <a href="<?php echo esc_url(get_permalink($prev_next['next'])); ?>" class="wdh-prev-next-link wdh-next">
                     <span class="wdh-prev-next-label">
                         Next
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </span>
                     <span class="wdh-prev-next-title"><?php echo esc_html($prev_next['next']->post_title); ?></span>
                 </a>

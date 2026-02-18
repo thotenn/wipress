@@ -239,6 +239,25 @@ class Wipress_REST_API {
         if (!empty($args['section'])) {
             $tax_query[] = ['taxonomy' => 'wiki_section', 'field' => 'slug', 'terms' => $args['section']];
         }
+
+        // Exclude private projects for non-editors
+        if (!current_user_can('edit_posts')) {
+            $private_terms = get_terms([
+                'taxonomy'   => 'wiki_project',
+                'hide_empty' => false,
+                'meta_query' => [['key' => '_wipress_public', 'value' => '0']],
+                'fields'     => 'ids',
+            ]);
+            if (!empty($private_terms) && !is_wp_error($private_terms)) {
+                $tax_query[] = [
+                    'taxonomy' => 'wiki_project',
+                    'field'    => 'term_id',
+                    'terms'    => $private_terms,
+                    'operator' => 'NOT IN',
+                ];
+            }
+        }
+
         if (count($tax_query) > 1) {
             $tax_query['relation'] = 'AND';
         }
@@ -255,7 +274,6 @@ class Wipress_REST_API {
         }
 
         $posts = get_posts($query_args);
-        $posts = array_filter($posts, [__CLASS__, 'is_post_project_visible']);
         return array_values(array_map([__CLASS__, 'format_page_summary'], $posts));
     }
 
@@ -285,7 +303,11 @@ class Wipress_REST_API {
         if (is_wp_error($post_id)) return $post_id;
 
         if (!empty($data['content_format'])) {
-            update_post_meta($post_id, '_wipress_content_format', sanitize_text_field($data['content_format']));
+            if (!in_array($data['content_format'], ['html', 'markdown'], true)) {
+                wp_delete_post($post_id, true);
+                return new WP_Error('invalid_format', 'content_format must be "html" or "markdown"', ['status' => 400]);
+            }
+            update_post_meta($post_id, '_wipress_content_format', $data['content_format']);
         }
 
         self::set_taxonomies($post_id, $data);
@@ -310,7 +332,10 @@ class Wipress_REST_API {
         if (is_wp_error($result)) return $result;
 
         if (!empty($data['content_format'])) {
-            update_post_meta($id, '_wipress_content_format', sanitize_text_field($data['content_format']));
+            if (!in_array($data['content_format'], ['html', 'markdown'], true)) {
+                return new WP_Error('invalid_format', 'content_format must be "html" or "markdown"', ['status' => 400]);
+            }
+            update_post_meta($id, '_wipress_content_format', $data['content_format']);
         }
 
         self::set_taxonomies($id, $data);

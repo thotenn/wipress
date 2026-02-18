@@ -38,6 +38,7 @@
 
 html.wipress-page {
     overflow-x: clip;
+    scroll-padding-top: 60px;
 }
 
 body.wipress-standalone {

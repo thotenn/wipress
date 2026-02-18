@@ -119,27 +119,32 @@ class Wipress_Template {
     }
 
     public static function get_project_sections($project_id) {
-        $sections = [];
-        $all_sections = get_terms(['taxonomy' => 'wiki_section', 'hide_empty' => false]);
+        // Single query: fetch one post per section for this project
+        $posts = get_posts([
+            'post_type'      => 'wiki',
+            'posts_per_page' => -1,
+            'post_status'    => 'publish',
+            'orderby'        => 'menu_order',
+            'order'          => 'ASC',
+            'tax_query'      => [
+                ['taxonomy' => 'wiki_project', 'field' => 'term_id', 'terms' => $project_id],
+            ],
+        ]);
 
-        foreach ($all_sections as $s) {
-            $check = get_posts([
-                'post_type'      => 'wiki',
-                'posts_per_page' => 1,
-                'post_status'    => 'publish',
-                'tax_query'      => [
-                    'relation' => 'AND',
-                    ['taxonomy' => 'wiki_project', 'field' => 'term_id', 'terms' => $project_id],
-                    ['taxonomy' => 'wiki_section', 'field' => 'term_id', 'terms' => $s->term_id],
-                ],
-            ]);
-            if (!empty($check)) {
-                $sections[] = [
-                    'term'      => $s,
-                    'first_url' => get_permalink($check[0]->ID),
+        // Group first post by section
+        $section_first = [];
+        foreach ($posts as $p) {
+            $terms = wp_get_object_terms($p->ID, 'wiki_section');
+            if (empty($terms) || is_wp_error($terms)) continue;
+            $sid = $terms[0]->term_id;
+            if (!isset($section_first[$sid])) {
+                $section_first[$sid] = [
+                    'term'      => $terms[0],
+                    'first_url' => get_permalink($p->ID),
                 ];
             }
         }
-        return $sections;
+
+        return array_values($section_first);
     }
 }

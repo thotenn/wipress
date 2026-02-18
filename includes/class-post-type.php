@@ -178,6 +178,11 @@ class Wipress_Post_Type {
 
     public static function save_visibility_field($term_id) {
         if (!isset($_POST['_wpnonce'])) return;
+        $nonce = sanitize_text_field(wp_unslash($_POST['_wpnonce']));
+        if (!wp_verify_nonce($nonce, 'update-tag_' . $term_id) &&
+            !wp_verify_nonce($nonce, 'add-tag')) {
+            return;
+        }
         $public = isset($_POST['wipress_public']) ? '1' : '0';
         update_term_meta($term_id, '_wipress_public', $public);
     }

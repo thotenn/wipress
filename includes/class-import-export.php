@@ -52,6 +52,13 @@ class Wipress_Import_Export {
         $error = self::validate_import_data($data);
         if (is_wp_error($error)) return $error;
 
+        // Validate all sections have required fields before making any changes
+        foreach ($data['sections'] as $section_data) {
+            if (empty($section_data['name']) && empty($section_data['slug'])) {
+                return new WP_Error('invalid_data', 'Each section must have a name or slug', ['status' => 400]);
+            }
+        }
+
         $project_slug = sanitize_title($data['project']['slug']);
         $project_name = sanitize_text_field($data['project']['name']);
 
@@ -62,7 +69,7 @@ class Wipress_Import_Export {
         }
         if (is_wp_error($term)) return $term;
 
-        // Replace mode: delete existing pages
+        // Replace mode: delete existing pages (after validation passes)
         if ($mode === 'replace') {
             self::delete_project_pages($project_slug);
         }
@@ -78,6 +85,7 @@ class Wipress_Import_Export {
             if (!$section_term) {
                 $section_term = wp_insert_term($section_name, 'wiki_section', ['slug' => $section_slug]);
             }
+            if (is_wp_error($section_term)) continue;
 
             $pages = $section_data['pages'] ?? [];
             $pages_created += self::import_page_tree($pages, 0, $project_slug, $section_slug);

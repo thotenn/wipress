@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WiPress
  * Description: Wiki system for WordPress with hierarchical navigation, Markdown support, REST API and MCP server.
- * Version: 1.0.0
+ * Version: 1.0.24
  * Author: Coding Partner
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -10,7 +10,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('WIPRESS_VERSION', '1.0.23');
+define('WIPRESS_VERSION', '1.0.24');
 define('WIPRESS_PATH', plugin_dir_path(__FILE__));
 define('WIPRESS_URL', plugin_dir_url(__FILE__));
 
@@ -24,7 +24,9 @@ require_once WIPRESS_PATH . 'includes/class-mcp-server.php';
 require_once WIPRESS_PATH . 'includes/class-import-export.php';
 
 // Allow Application Passwords over HTTP in local dev
-add_filter('wp_is_application_passwords_available', '__return_true');
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    add_filter('wp_is_application_passwords_available', '__return_true');
+}
 
 // Init
 Wipress_Post_Type::init();
@@ -43,5 +45,9 @@ add_action('init', function() {
 register_activation_hook(__FILE__, function() {
     Wipress_Post_Type::register();
     Wipress_Post_Type::register_rewrite_rules();
+    flush_rewrite_rules();
+});
+
+register_deactivation_hook(__FILE__, function() {
     flush_rewrite_rules();
 });

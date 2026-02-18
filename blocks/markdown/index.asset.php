@@ -7,5 +7,5 @@ return [
         'wp-components',
         'wp-api-fetch',
     ],
-    'version' => '1.0.1',
+    'version' => defined('WIPRESS_VERSION') ? WIPRESS_VERSION : '1.0.0',
 ];

@@ -20,13 +20,20 @@
 
             useEffect(function() {
                 if (!preview || !content) { setHtml(''); return; }
+                var controller = new AbortController();
                 wp.apiFetch({
                     path: '/wipress/v1/render-markdown',
                     method: 'POST',
-                    data: { content: content }
+                    data: { content: content },
+                    signal: controller.signal
                 }).then(function(res) {
                     setHtml(res.html || '');
+                }).catch(function(err) {
+                    if (err.name !== 'AbortError') {
+                        setHtml('<p style="color:#d63638">Preview failed: ' + (err.message || 'Unknown error') + '</p>');
+                    }
                 });
+                return function() { controller.abort(); };
             }, [preview, content]);
 
             return el('div', blockProps,
