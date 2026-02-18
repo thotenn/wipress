@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WiPress
  * Description: Wiki system for WordPress with hierarchical navigation, Markdown support, REST API and MCP server.
- * Version: 1.0.24
+ * Version: 1.0.25
  * Author: Coding Partner
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -10,7 +10,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('WIPRESS_VERSION', '1.0.24');
+define('WIPRESS_VERSION', '1.0.25');
 define('WIPRESS_PATH', plugin_dir_path(__FILE__));
 define('WIPRESS_URL', plugin_dir_url(__FILE__));
 
