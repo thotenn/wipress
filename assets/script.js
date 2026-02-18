@@ -108,12 +108,17 @@ document.addEventListener('DOMContentLoaded', function() {
     var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
     document.querySelectorAll('.wdh-render pre').forEach(function(pre) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'wdh-code-wrapper';
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'wdh-code-copy';
         btn.innerHTML = copyIcon;
         btn.setAttribute('aria-label', 'Copy code');
-        pre.appendChild(btn);
+        wrapper.appendChild(btn);
 
         btn.addEventListener('click', function() {
             var code = pre.querySelector('code');

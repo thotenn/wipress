@@ -502,13 +502,16 @@ body.wipress-standalone {
     overflow: hidden;
 }
 
+.wdh-code-wrapper {
+    position: relative;
+}
+
 .wdh-render pre {
     background: var(--code-bg);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 16px;
     overflow-x: auto;
-    position: relative;
 }
 
 .wdh-code-copy {
@@ -529,7 +532,7 @@ body.wipress-standalone {
     transition: opacity 0.15s, color 0.15s, background-color 0.15s;
 }
 
-.wdh-render pre:hover .wdh-code-copy {
+.wdh-code-wrapper:hover .wdh-code-copy {
     opacity: 1;
 }
 
