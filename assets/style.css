@@ -455,6 +455,12 @@ body.wipress-standalone {
     overflow-x: hidden;
 }
 
+/* Archive page: single full-width column (no sidebars) */
+.wdh-inf-content--full {
+    grid-column: 1 / -1;
+    max-width: 760px;
+}
+
 .wdh-inf-content h1 {
     font-size: 2.5rem;
     margin-bottom: 32px;
@@ -1037,6 +1043,111 @@ body.wipress-standalone {
     padding: 4px 0;
 }
 
+/* --- Skip link (accessibility) --- */
+.wdh-skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 300;
+    padding: 10px 16px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 0 0 6px 0;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.wdh-skip-link:focus {
+    left: 0;
+}
+
+/* --- Responsive table wrapper --- */
+.wdh-table-wrapper {
+    overflow-x: auto;
+    margin: 24px 0;
+    scrollbar-width: thin;
+}
+
+.wdh-table-wrapper > table {
+    margin: 0;
+}
+
+/* --- Search result keyboard navigation --- */
+.wdh-search-result.is-active {
+    background: var(--hover-bg);
+}
+
+/* --- Mobile collapsible TOC (shown where the right-sidebar TOC is hidden) --- */
+.wdh-mobile-toc {
+    display: none;
+    margin: 0 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 12px;
+}
+
+.wdh-mobile-toc > summary {
+    cursor: pointer;
+    padding: 12px 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    list-style: none;
+}
+
+.wdh-mobile-toc > summary::-webkit-details-marker { display: none; }
+
+.wdh-mobile-toc[open] > summary {
+    border-bottom: 1px solid var(--border);
+}
+
+#wdh-mobile-toc-js {
+    padding: 8px 0;
+}
+
+#wdh-mobile-toc-js a {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text);
+    opacity: 0.7;
+    text-decoration: none;
+    padding: 6px 0 6px 12px;
+    border-left: 2px solid transparent;
+}
+
+#wdh-mobile-toc-js a.toc-indent-1 { padding-left: 24px; }
+#wdh-mobile-toc-js a.toc-indent-2 { padding-left: 36px; }
+
+/* --- Focus-visible (keyboard navigation) --- */
+.wdh-inf-tree li a:focus-visible,
+.wdh-tree-folder:focus-visible,
+.wdh-tree-toggle:focus-visible,
+.wdh-search-result:focus-visible,
+.wdh-search-input:focus-visible,
+.wdh-header-btn:focus-visible,
+.wdh-inf-tabs a:focus-visible,
+#wdh-toc-js a:focus-visible,
+#wdh-mobile-toc-js a:focus-visible,
+.wdh-skip-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-radius: 4px;
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+    html.wipress-page { scroll-behavior: auto; }
+    .wdh-inf-container *,
+    .wdh-inf-container *::before,
+    .wdh-inf-container *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
 /* --- Responsive --- */
 @media (max-width: 1100px) {
     .wdh-inf-grid {
@@ -1044,6 +1155,9 @@ body.wipress-standalone {
     }
     .wdh-inf-sidebar-right {
         display: none;
+    }
+    .wdh-mobile-toc {
+        display: block;
     }
 }
 

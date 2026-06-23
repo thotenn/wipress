@@ -50,7 +50,7 @@ class Wipress_Walker extends Walker {
         $output .= "$indent<li class=\"$class_str\">";
 
         if ($has_children) {
-            $output .= '<button class="wdh-tree-toggle" aria-expanded="' . ($expanded === 'expanded' ? 'true' : 'false') . '">';
+            $output .= '<button type="button" class="wdh-tree-toggle" aria-label="' . esc_attr__('Toggle section', 'wipress') . '" aria-expanded="' . ($expanded === 'expanded' ? 'true' : 'false') . '">';
             $output .= '<svg class="wdh-chevron" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 4l4 4-4 4"/></svg>';
             $output .= '</button>';
         }

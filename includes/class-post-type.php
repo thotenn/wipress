@@ -20,12 +20,24 @@ class Wipress_Post_Type {
         add_filter('manage_wiki_project_custom_column', [__CLASS__, 'render_project_column'], 10, 3);
         add_action('admin_footer-edit-tags.php', [__CLASS__, 'render_import_export_scripts']);
         add_action('admin_footer-term.php', [__CLASS__, 'render_import_export_scripts']);
+
+        // Invalidate the cached navigation tree when content or taxonomy changes
+        add_action('save_post_wiki', [__CLASS__, 'bust_tree_cache']);
+        add_action('deleted_post', [__CLASS__, 'bust_tree_cache']);
+        add_action('edited_wiki_project', [__CLASS__, 'bust_tree_cache']);
+        add_action('created_wiki_project', [__CLASS__, 'bust_tree_cache']);
+        add_action('edited_wiki_section', [__CLASS__, 'bust_tree_cache']);
+        add_action('created_wiki_section', [__CLASS__, 'bust_tree_cache']);
+    }
+
+    public static function bust_tree_cache() {
+        Wipress_REST_API::bust_tree_cache();
     }
 
     public static function register() {
         register_post_type('wiki', [
             'public'       => true,
-            'label'        => 'Wikis',
+            'label'        => __('Wikis', 'wipress'),
             'show_in_rest' => true,
             'hierarchical' => true,
             'supports'     => ['title', 'editor', 'revisions', 'thumbnail', 'excerpt', 'page-attributes', 'custom-fields'],
@@ -35,22 +47,22 @@ class Wipress_Post_Type {
 
         register_taxonomy('wiki_project', 'wiki', [
             'labels'       => [
-                'name'                       => 'Projects',
-                'singular_name'              => 'Project',
-                'search_items'               => 'Search Projects',
-                'all_items'                  => 'All Projects',
-                'parent_item'                => 'Parent Project',
-                'parent_item_colon'          => 'Parent Project:',
-                'edit_item'                  => 'Edit Project',
-                'view_item'                  => 'View Project',
-                'update_item'                => 'Update Project',
-                'add_new_item'               => 'Add New Project',
-                'new_item_name'              => 'New Project Name',
-                'not_found'                  => 'No projects found.',
-                'no_terms'                   => 'No projects',
-                'items_list_navigation'      => 'Projects list navigation',
-                'items_list'                 => 'Projects list',
-                'back_to_items'              => '&larr; Go to Projects',
+                'name'                       => __('Projects', 'wipress'),
+                'singular_name'              => __('Project', 'wipress'),
+                'search_items'               => __('Search Projects', 'wipress'),
+                'all_items'                  => __('All Projects', 'wipress'),
+                'parent_item'                => __('Parent Project', 'wipress'),
+                'parent_item_colon'          => __('Parent Project:', 'wipress'),
+                'edit_item'                  => __('Edit Project', 'wipress'),
+                'view_item'                  => __('View Project', 'wipress'),
+                'update_item'                => __('Update Project', 'wipress'),
+                'add_new_item'               => __('Add New Project', 'wipress'),
+                'new_item_name'              => __('New Project Name', 'wipress'),
+                'not_found'                  => __('No projects found.', 'wipress'),
+                'no_terms'                   => __('No projects', 'wipress'),
+                'items_list_navigation'      => __('Projects list navigation', 'wipress'),
+                'items_list'                 => __('Projects list', 'wipress'),
+                'back_to_items'              => __('&larr; Go to Projects', 'wipress'),
             ],
             'hierarchical' => true,
             'show_in_rest' => true,
@@ -59,34 +71,31 @@ class Wipress_Post_Type {
 
         register_taxonomy('wiki_section', 'wiki', [
             'labels'       => [
-                'name'                       => 'Sections',
-                'singular_name'              => 'Section',
-                'search_items'               => 'Search Sections',
-                'all_items'                  => 'All Sections',
-                'parent_item'                => 'Parent Section',
-                'parent_item_colon'          => 'Parent Section:',
-                'edit_item'                  => 'Edit Section',
-                'view_item'                  => 'View Section',
-                'update_item'                => 'Update Section',
-                'add_new_item'               => 'Add New Section',
-                'new_item_name'              => 'New Section Name',
-                'not_found'                  => 'No sections found.',
-                'no_terms'                   => 'No sections',
-                'items_list_navigation'      => 'Sections list navigation',
-                'items_list'                 => 'Sections list',
-                'back_to_items'              => '&larr; Go to Sections',
+                'name'                       => __('Sections', 'wipress'),
+                'singular_name'              => __('Section', 'wipress'),
+                'search_items'               => __('Search Sections', 'wipress'),
+                'all_items'                  => __('All Sections', 'wipress'),
+                'parent_item'                => __('Parent Section', 'wipress'),
+                'parent_item_colon'          => __('Parent Section:', 'wipress'),
+                'edit_item'                  => __('Edit Section', 'wipress'),
+                'view_item'                  => __('View Section', 'wipress'),
+                'update_item'                => __('Update Section', 'wipress'),
+                'add_new_item'               => __('Add New Section', 'wipress'),
+                'new_item_name'              => __('New Section Name', 'wipress'),
+                'not_found'                  => __('No sections found.', 'wipress'),
+                'no_terms'                   => __('No sections', 'wipress'),
+                'items_list_navigation'      => __('Sections list navigation', 'wipress'),
+                'items_list'                 => __('Sections list', 'wipress'),
+                'back_to_items'              => __('&larr; Go to Sections', 'wipress'),
             ],
             'hierarchical' => true,
             'show_in_rest' => true,
             'rewrite'      => ['slug' => 'wiki-section'],
         ]);
 
-        register_post_meta('wiki', 'menu_order', [
-            'show_in_rest'  => true,
-            'single'        => true,
-            'type'          => 'integer',
-            'auth_callback' => function() { return current_user_can('edit_posts'); },
-        ]);
+        // Note: `menu_order` is a native post field (exposed in REST because the CPT
+        // supports `page-attributes`). The block editor panel edits it as a core attribute,
+        // so no custom post meta is needed — a meta of the same name would only shadow it.
     }
 
     public static function register_rewrite_rules() {
@@ -106,8 +115,9 @@ class Wipress_Post_Type {
     public static function filter_post_type_link($post_link, $post) {
         if ($post->post_type !== 'wiki') return $post_link;
 
-        $terms = wp_get_object_terms($post->ID, 'wiki_project');
-        $project_slug = !empty($terms) && !is_wp_error($terms) ? $terms[0]->slug : 'uncategorized';
+        // get_the_terms() is cached per request — important since this runs on every get_permalink()
+        $terms = get_the_terms($post, 'wiki_project');
+        $project_slug = (!empty($terms) && !is_wp_error($terms)) ? reset($terms)->slug : 'uncategorized';
 
         return home_url('/wiki/' . $project_slug . '/' . get_page_uri($post) . '/');
     }
@@ -156,8 +166,8 @@ class Wipress_Post_Type {
     public static function render_visibility_add_field($taxonomy) {
         ?>
         <div class="form-field">
-            <label><input type="checkbox" name="wipress_public" value="1" checked /> Public project</label>
-            <p class="description">Uncheck to make this project private. Private projects are only visible to editors and administrators.</p>
+            <label><input type="checkbox" name="wipress_public" value="1" checked /> <?php esc_html_e('Public project', 'wipress'); ?></label>
+            <p class="description"><?php esc_html_e('Uncheck to make this project private. Private projects are only visible to editors and administrators.', 'wipress'); ?></p>
         </div>
         <?php
     }
@@ -167,10 +177,10 @@ class Wipress_Post_Type {
         if ($public === '') $public = '1';
         ?>
         <tr class="form-field">
-            <th scope="row">Visibility</th>
+            <th scope="row"><?php esc_html_e('Visibility', 'wipress'); ?></th>
             <td>
-                <label><input type="checkbox" name="wipress_public" value="1" <?php checked($public, '1'); ?> /> Public project</label>
-                <p class="description">Uncheck to make this project private. Private projects are only visible to editors and administrators.</p>
+                <label><input type="checkbox" name="wipress_public" value="1" <?php checked($public, '1'); ?> /> <?php esc_html_e('Public project', 'wipress'); ?></label>
+                <p class="description"><?php esc_html_e('Uncheck to make this project private. Private projects are only visible to editors and administrators.', 'wipress'); ?></p>
             </td>
         </tr>
         <?php
@@ -190,7 +200,7 @@ class Wipress_Post_Type {
     // --- Import/Export UI ---
 
     public static function add_project_columns($columns) {
-        $columns['wipress_actions'] = __('Import / Export');
+        $columns['wipress_actions'] = __('Import / Export', 'wipress');
         return $columns;
     }
 

@@ -1,5 +1,34 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // --- i18n helper (strings localized from PHP via wp_localize_script) ---
+    var i18n = window.wipressI18n || {};
+    function t(key, fallback) { return i18n[key] || fallback; }
+
+    // Respect the user's reduced-motion preference for programmatic scrolling
+    var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
+
+    // Copy text to clipboard with a fallback for non-secure (HTTP) contexts
+    function copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise(function(resolve, reject) {
+            try {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                var ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                ok ? resolve() : reject(new Error('copy failed'));
+            } catch (e) { reject(e); }
+        });
+    }
+
     // --- Sidebar search ---
     document.querySelectorAll('.wdh-search').forEach(function(container) {
         var searchUrl = container.dataset.searchUrl;
@@ -8,28 +37,52 @@ document.addEventListener('DOMContentLoaded', function() {
         var results = container.querySelector('.wdh-search-results');
         var debounceTimer = null;
         var controller = null;
+        var activeIndex = -1;
+
+        // ARIA combobox wiring
+        input.setAttribute('role', 'combobox');
+        input.setAttribute('aria-autocomplete', 'list');
+        input.setAttribute('aria-expanded', 'false');
+        results.setAttribute('role', 'listbox');
+
+        function setActive(index) {
+            var options = results.querySelectorAll('.wdh-search-result');
+            if (!options.length) return;
+            if (index < 0) index = options.length - 1;
+            if (index >= options.length) index = 0;
+            options.forEach(function(o) { o.classList.remove('is-active'); });
+            activeIndex = index;
+            var opt = options[activeIndex];
+            opt.classList.add('is-active');
+            opt.scrollIntoView({ block: 'nearest' });
+        }
 
         function closeResults() {
             results.classList.remove('is-open');
+            input.setAttribute('aria-expanded', 'false');
+            activeIndex = -1;
         }
 
         function openResults() {
             if (results.children.length > 0) {
                 results.classList.add('is-open');
+                input.setAttribute('aria-expanded', 'true');
             }
         }
 
         function renderResults(items) {
             results.textContent = '';
+            activeIndex = -1;
             if (items.length === 0) {
                 var empty = document.createElement('div');
                 empty.className = 'wdh-search-empty';
-                empty.textContent = 'No results found';
+                empty.textContent = t('noResults', 'No results found');
                 results.appendChild(empty);
             } else {
                 items.forEach(function(item) {
                     var a = document.createElement('a');
                     a.className = 'wdh-search-result';
+                    a.setAttribute('role', 'option');
                     a.href = item.url;
                     var title = document.createElement('div');
                     title.className = 'wdh-search-result-title';
@@ -45,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             results.classList.add('is-open');
+            input.setAttribute('aria-expanded', 'true');
         }
 
         function doSearch(query) {
@@ -53,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             var loading = document.createElement('div');
             loading.className = 'wdh-search-loading';
-            loading.textContent = 'Searching...';
+            loading.textContent = t('searching', 'Searching...');
             results.textContent = '';
             results.appendChild(loading);
             results.classList.add('is-open');
@@ -84,11 +138,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         input.addEventListener('keydown', function(e) {
+            var isOpen = results.classList.contains('is-open');
             if (e.key === 'Escape') {
                 input.value = '';
                 results.textContent = '';
                 closeResults();
                 input.blur();
+            } else if (e.key === 'ArrowDown' && isOpen) {
+                e.preventDefault();
+                setActive(activeIndex + 1);
+            } else if (e.key === 'ArrowUp' && isOpen) {
+                e.preventDefault();
+                setActive(activeIndex - 1);
+            } else if (e.key === 'Enter') {
+                var options = results.querySelectorAll('.wdh-search-result');
+                if (isOpen && activeIndex >= 0 && options[activeIndex]) {
+                    e.preventDefault();
+                    window.location.href = options[activeIndex].href;
+                }
             }
         });
 
@@ -117,21 +184,30 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.type = 'button';
         btn.className = 'wdh-code-copy';
         btn.innerHTML = copyIcon;
-        btn.setAttribute('aria-label', 'Copy code');
+        btn.setAttribute('aria-label', t('copyCode', 'Copy code'));
         wrapper.appendChild(btn);
 
         btn.addEventListener('click', function() {
             var code = pre.querySelector('code');
             var text = (code || pre).textContent;
-            navigator.clipboard.writeText(text).then(function() {
+            copyToClipboard(text).then(function() {
                 btn.innerHTML = checkIcon;
                 btn.classList.add('is-copied');
                 setTimeout(function() {
                     btn.innerHTML = copyIcon;
                     btn.classList.remove('is-copied');
                 }, 2000);
-            });
+            }).catch(function() {});
         });
+    });
+
+    // --- Wrap wide tables so they scroll horizontally on small screens ---
+    document.querySelectorAll('.wdh-render table').forEach(function(table) {
+        if (table.parentNode && table.parentNode.classList.contains('wdh-table-wrapper')) return;
+        var wrapper = document.createElement('div');
+        wrapper.className = 'wdh-table-wrapper';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
     });
 
     // --- Sidebar tree expand/collapse ---
@@ -173,16 +249,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- TOC generation with slug-based IDs ---
     var render = document.querySelector('.wdh-render');
     var toc = document.getElementById('wdh-toc-js');
+    var mobileToc = document.getElementById('wdh-mobile-toc-js');
+    var mobileTocBox = document.getElementById('wdh-mobile-toc');
     if (render && toc) {
         var headings = render.querySelectorAll('h2, h3, h4');
         if (headings.length === 0) {
             var tocContainer = document.querySelector('.wdh-inf-toc');
             if (tocContainer) tocContainer.style.display = 'none';
+            if (mobileTocBox) mobileTocBox.style.display = 'none';
         } else {
             var slugCounts = {};
 
             headings.forEach(function(h) {
-                var slug = h.textContent.trim()
+                // Capture clean text before appending the '#' anchor below
+                var headingText = h.textContent.trim();
+                var slug = headingText
                     .toLowerCase()
                     .replace(/[^\w\s-]/g, '')
                     .replace(/\s+/g, '-')
@@ -205,12 +286,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 anchor.className = 'wdh-heading-anchor';
                 anchor.href = '#' + slug;
                 anchor.textContent = '#';
-                anchor.setAttribute('aria-label', 'Link to this section');
+                anchor.setAttribute('aria-label', t('linkSection', 'Link to this section'));
                 anchor.addEventListener('click', function(ev) {
                     ev.preventDefault();
-                    var t = document.getElementById(this.getAttribute('href').slice(1));
-                    if (t) {
-                        t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    var target = document.getElementById(this.getAttribute('href').slice(1));
+                    if (target) {
+                        target.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
                         history.replaceState(null, '', this.getAttribute('href'));
                     }
                 });
@@ -218,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 var a = document.createElement('a');
                 a.href = '#' + slug;
-                a.textContent = h.textContent;
+                a.textContent = headingText;
                 a.className = 'toc-link';
 
                 var tag = h.tagName;
@@ -229,12 +310,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.preventDefault();
                     var target = document.getElementById(slug);
                     if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        target.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
                         history.replaceState(null, '', '#' + slug);
                     }
                 });
 
                 toc.appendChild(a);
+
+                // Mirror into the mobile collapsible TOC (native anchor jump, closes on tap)
+                if (mobileToc) {
+                    var ma = document.createElement('a');
+                    ma.href = '#' + slug;
+                    ma.textContent = headingText;
+                    ma.className = a.className;
+                    ma.addEventListener('click', function() {
+                        if (mobileTocBox) mobileTocBox.open = false;
+                    });
+                    mobileToc.appendChild(ma);
+                }
             });
 
             // IntersectionObserver for active section tracking
@@ -312,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     URL.revokeObjectURL(a.href);
                 })
                 .catch(function(err) {
-                    console.error('Download failed:', err);
+                    console.error(t('downloadFail', 'Download failed') + ':', err);
                 });
         });
     }
@@ -322,15 +415,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (copyBtn) {
         copyBtn.addEventListener('click', function() {
             var url = copyBtn.dataset.mcpUrl;
-            navigator.clipboard.writeText(url).then(function() {
+            copyToClipboard(url).then(function() {
                 copyBtn.classList.add('is-copied');
                 var orig = copyBtn.dataset.tooltip;
-                copyBtn.dataset.tooltip = 'Copied!';
+                copyBtn.dataset.tooltip = t('copied', 'Copied!');
                 setTimeout(function() {
                     copyBtn.classList.remove('is-copied');
                     copyBtn.dataset.tooltip = orig;
                 }, 2000);
-            });
+            }).catch(function() {});
         });
     }
 

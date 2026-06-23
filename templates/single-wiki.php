@@ -27,6 +27,8 @@ $sidebar_posts = ($project && $section) ? Wipress_Template::get_sidebar_posts($p
 $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_posts, $current_post_id) : ['prev' => null, 'next' => null];
 ?>
 
+<a class="wdh-skip-link" href="#wdh-main"><?php esc_html_e('Skip to content', 'wipress'); ?></a>
+
 <div class="wdh-inf-container">
     <?php if ($project) : ?>
     <header class="wdh-inf-header">
@@ -47,8 +49,8 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
         </div>
         <a href="<?php echo esc_url(home_url('/')); ?>" class="wdh-inf-site-title wdh-desktop-only"><?php echo esc_html(get_bloginfo('name')); ?></a>
         <div class="wdh-inf-header-actions">
-            <button type="button" class="wdh-header-btn wdh-desktop-only" id="wdh-btn-download-md"
-                    data-tooltip="Download as Markdown"
+            <button type="button" class="wdh-header-btn" id="wdh-btn-download-md"
+                    data-tooltip="<?php esc_attr_e('Download as Markdown', 'wipress'); ?>"
                     data-api-url="<?php echo esc_url(rest_url('wipress/v1/pages/' . $current_post_id)); ?>"
                     data-page-slug="<?php echo esc_attr(get_post()->post_name); ?>">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -57,15 +59,15 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
             </button>
-            <button type="button" class="wdh-header-btn wdh-desktop-only" id="wdh-btn-copy-mcp"
-                    data-tooltip="Copy MCP URL"
+            <button type="button" class="wdh-header-btn" id="wdh-btn-copy-mcp"
+                    data-tooltip="<?php esc_attr_e('Copy MCP URL', 'wipress'); ?>"
                     data-mcp-url="<?php echo esc_url(rest_url('wipress/v1/mcp/' . $project->slug)); ?>">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="4 17 10 11 4 5"/>
                     <line x1="12" y1="19" x2="20" y2="19"/>
                 </svg>
             </button>
-            <button type="button" class="wdh-header-btn" id="wdh-btn-theme-toggle" data-tooltip="Toggle theme">
+            <button type="button" class="wdh-header-btn" id="wdh-btn-theme-toggle" data-tooltip="<?php esc_attr_e('Toggle theme', 'wipress'); ?>">
                 <svg class="wdh-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="5"/>
                     <line x1="12" y1="1" x2="12" y2="3"/>
@@ -96,11 +98,11 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
             <div id="wdh-drawer-tree-view">
                 <button type="button" class="wdh-drawer-back" id="wdh-drawer-back">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                    Back to main menu
+                    <?php esc_html_e('Back to main menu', 'wipress'); ?>
                 </button>
                 <div class="wdh-search" data-search-url="<?php echo esc_url(rest_url('wipress/v1/search')); ?>" data-project="<?php echo esc_attr($project->slug); ?>">
                     <svg class="wdh-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" class="wdh-search-input" placeholder="Search..." autocomplete="off" />
+                    <input type="text" class="wdh-search-input" placeholder="<?php esc_attr_e('Search...', 'wipress'); ?>" autocomplete="off" />
                     <div class="wdh-search-results"></div>
                 </div>
                 <?php echo Wipress_Walker::render_tree($sidebar_posts, $current_post_id); ?>
@@ -129,7 +131,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
             <?php echo Wipress_Walker::render_tree($sidebar_posts, $current_post_id); ?>
         </aside>
 
-        <main class="wdh-inf-content">
+        <main class="wdh-inf-content" id="wdh-main">
             <article>
                 <?php
                 $ancestors = array_reverse(get_post_ancestors($current_post_id));
@@ -147,6 +149,10 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                 </nav>
                 <?php endif; ?>
                 <h1><?php the_title(); ?></h1>
+                <details class="wdh-mobile-toc" id="wdh-mobile-toc">
+                    <summary><?php esc_html_e('On this page', 'wipress'); ?></summary>
+                    <div id="wdh-mobile-toc-js"></div>
+                </details>
                 <?php if (empty(trim(get_post()->post_content))) :
                     $children = get_posts([
                         'post_parent'    => $current_post_id,
@@ -173,7 +179,10 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                 <?php else : ?>
                     <div class="wdh-render"><?php the_content(); ?></div>
                 <?php endif; ?>
-                <div class="wdh-last-updated">Last updated on <?php echo esc_html(get_the_modified_date('F j, Y')); ?></div>
+                <div class="wdh-last-updated"><?php
+                    /* translators: %s: last modified date */
+                    printf(esc_html__('Last updated on %s', 'wipress'), esc_html(get_the_modified_date(get_option('date_format'))));
+                ?></div>
             </article>
 
             <?php if ($prev_next['prev'] || $prev_next['next']) : ?>
@@ -182,7 +191,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                 <a href="<?php echo esc_url(get_permalink($prev_next['prev'])); ?>" class="wdh-prev-next-link wdh-prev">
                     <span class="wdh-prev-next-label">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                        Previous
+                        <?php esc_html_e('Previous', 'wipress'); ?>
                     </span>
                     <span class="wdh-prev-next-title"><?php echo esc_html($prev_next['prev']->post_title); ?></span>
                 </a>
@@ -192,7 +201,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
                 <?php if ($prev_next['next']) : ?>
                 <a href="<?php echo esc_url(get_permalink($prev_next['next'])); ?>" class="wdh-prev-next-link wdh-next">
                     <span class="wdh-prev-next-label">
-                        Next
+                        <?php esc_html_e('Next', 'wipress'); ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </span>
                     <span class="wdh-prev-next-title"><?php echo esc_html($prev_next['next']->post_title); ?></span>
@@ -204,7 +213,7 @@ $prev_next = !empty($sidebar_posts) ? Wipress_Template::get_prev_next($sidebar_p
 
         <aside class="wdh-inf-sidebar-right">
             <div class="wdh-inf-toc">
-                <span class="toc-label">On this page</span>
+                <span class="toc-label"><?php esc_html_e('On this page', 'wipress'); ?></span>
                 <div id="wdh-toc-js"></div>
             </div>
         </aside>

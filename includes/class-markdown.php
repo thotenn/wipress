@@ -20,7 +20,19 @@ class Wipress_Markdown {
 
     public static function render($markdown) {
         $html = self::get_parsedown()->text($markdown);
-        return wp_kses_post($html);
+        $html = wp_kses_post($html);
+        return self::add_image_loading_attrs($html);
+    }
+
+    /**
+     * Add lazy-loading hints to <img> tags that don't already declare a loading
+     * attribute. The_content path gets this from core, but the block render path does not.
+     */
+    private static function add_image_loading_attrs($html) {
+        if (strpos($html, '<img') === false) return $html;
+        return preg_replace_callback('/<img\b(?![^>]*\bloading=)([^>]*)>/i', function($m) {
+            return '<img loading="lazy" decoding="async"' . $m[1] . '>';
+        }, $html);
     }
 
     public static function filter_content($content) {

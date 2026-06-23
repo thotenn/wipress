@@ -1,5 +1,46 @@
 # Changelog
 
+## 1.0.27
+
+### Fixes
+- Fix Markdown double-escaping: `wp_kses_post()` is no longer applied when saving markdown pages (it escaped `<`/`>` to entities that Parsedown then re-escaped, showing a literal `&gt;`). Markdown is now stored verbatim and sanitized at render time
+- Saving markdown now disables the `content_save_pre` kses filter, so content is not corrupted for users without the `unfiltered_html` capability (REST/MCP with lower roles)
+
+> Note: content already stored with this bug must be repaired separately (decode `&lt;`/`&gt;`/`&amp;` in existing markdown pages).
+
+## 1.0.26
+
+Comprehensive audit of performance, accessibility, mobile and i18n (see `docs/tickets/0-update-ticket/`).
+
+### Fixes
+- Fix archive page (`/wiki/`) layout: the project list is no longer squeezed into 260px (`.wdh-inf-content--full` class defined)
+- The archive page now respects the light/dark theme (theme bootstrap added)
+- Fix TOC text: it no longer includes a trailing `#` picked up from the heading anchor
+
+### Performance
+- Removed N+1 queries: `wp_get_object_terms()` → `get_the_terms()` (uses the term cache) in REST, templates and permalinks
+- `list_sections_internal()`: project lookup hoisted out of the loop
+- `get_tree_internal()`: a single page query + grouping by section (previously O(sections) queries)
+- Transient cache for the navigation tree, invalidated when saving pages or editing projects/sections
+
+### Accessibility and mobile
+- Wide tables now scroll horizontally on mobile (wrapper)
+- Collapsible "On this page" TOC on tablet/mobile (where the right sidebar was hidden)
+- Download Markdown and Copy MCP URL actions also available on mobile
+- Keyboard navigation in the search box (↑/↓/Enter) + ARIA roles
+- `aria-label` on tree toggles, "Skip to content" skip link, `:focus-visible` styles
+- `prefers-reduced-motion` support (CSS + programmatic scrolling)
+- Clipboard fallback for non-secure (HTTP) contexts
+- Content images with `loading="lazy"` / `decoding="async"`
+
+### Internationalization
+- `wipress` text domain loaded; all user-facing strings (PHP and JS) wrapped via `__()`/`wp_localize_script`
+- Multibyte-safe search excerpts (`mb_stripos`/`mb_substr`)
+
+### Dependencies and cleanup
+- Prism.js served locally from `vendor/prism/` (no external CDN)
+- Removed the redundant `menu_order` post meta (it shadowed the native field)
+
 ## 1.0.7
 
 - Add breadcrumb navigation above page title (Project > Ancestor > Current Page)

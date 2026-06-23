@@ -118,8 +118,10 @@ class Wipress_REST_API {
 
     private static function is_post_project_visible($post) {
         if (current_user_can('edit_posts')) return true;
-        $terms = wp_get_object_terms($post->ID, 'wiki_project');
-        return empty($terms) || self::is_project_visible($terms[0]);
+        // get_the_terms() consumes the object-term cache primed by WP_Query (unlike wp_get_object_terms)
+        $terms = get_the_terms($post, 'wiki_project');
+        if (empty($terms) || is_wp_error($terms)) return true;
+        return self::is_project_visible(reset($terms));
     }
 
     // --- Internal methods (reused by MCP) ---
@@ -150,14 +152,20 @@ class Wipress_REST_API {
         $terms = get_terms(['taxonomy' => 'wiki_section', 'hide_empty' => false]);
         if (is_wp_error($terms)) return [];
 
+        // Resolve the project once (not inside the loop) when filtering by project
+        $project = null;
+        if ($project_slug) {
+            $project = get_term_by('slug', $project_slug, 'wiki_project');
+            if (!$project || !self::is_project_visible($project)) return [];
+        }
+
         $sections = [];
         foreach ($terms as $t) {
-            if ($project_slug) {
-                $project = get_term_by('slug', $project_slug, 'wiki_project');
-                if (!$project || !self::is_project_visible($project)) continue;
+            if ($project) {
                 $posts = get_posts([
                     'post_type'      => 'wiki',
                     'posts_per_page' => 1,
+                    'fields'         => 'ids',
                     'tax_query'      => [
                         'relation' => 'AND',
                         ['taxonomy' => 'wiki_project', 'field' => 'term_id', 'terms' => $project->term_id],
@@ -175,32 +183,70 @@ class Wipress_REST_API {
         return $sections;
     }
 
+    /**
+     * Cache version salt. Bumped on any content/term change so all cached trees are
+     * invalidated at once without having to enumerate transient keys.
+     */
+    public static function tree_cache_version() {
+        $v = get_option('wipress_tree_cache_v');
+        if ($v === false) {
+            $v = 1;
+            add_option('wipress_tree_cache_v', $v, '', false);
+        }
+        return $v;
+    }
+
+    public static function bust_tree_cache() {
+        update_option('wipress_tree_cache_v', time(), false);
+    }
+
     public static function get_tree_internal($project_slug) {
         $project = get_term_by('slug', $project_slug, 'wiki_project');
         if (!$project) return new WP_Error('not_found', 'Project not found', ['status' => 404]);
         if (!self::is_project_visible($project)) return new WP_Error('not_found', 'Project not found', ['status' => 404]);
 
-        $sections = self::list_sections_internal($project_slug);
+        // Cache only the public tree; editors (who may see private/draft state via writes) bypass it
+        $use_cache = !current_user_can('edit_posts');
+        $cache_key = 'wipress_tree_' . self::tree_cache_version() . '_' . md5($project_slug);
+        if ($use_cache) {
+            $cached = get_transient($cache_key);
+            if ($cached !== false) return $cached;
+        }
+
+        // Single query for all project pages; section terms come from the primed cache
+        $posts = get_posts([
+            'post_type'      => 'wiki',
+            'posts_per_page' => -1,
+            'orderby'        => 'menu_order',
+            'order'          => 'ASC',
+            'post_status'    => 'publish',
+            'tax_query'      => [
+                ['taxonomy' => 'wiki_project', 'field' => 'term_id', 'terms' => $project->term_id],
+            ],
+        ]);
+
+        // Group pages by their section term id (cache primed by the query above)
+        $by_section = [];
+        foreach ($posts as $p) {
+            $sterms = get_the_terms($p, 'wiki_section');
+            if (empty($sterms) || is_wp_error($sterms)) continue;
+            $by_section[reset($sterms)->term_id][] = $p;
+        }
+
+        $section_terms = get_terms(['taxonomy' => 'wiki_section', 'hide_empty' => false]);
+        if (is_wp_error($section_terms)) $section_terms = [];
+
         $tree = [];
-
-        foreach ($sections as $section) {
-            $posts = get_posts([
-                'post_type'      => 'wiki',
-                'posts_per_page' => -1,
-                'orderby'        => 'menu_order',
-                'order'          => 'ASC',
-                'post_status'    => 'publish',
-                'tax_query'      => [
-                    'relation' => 'AND',
-                    ['taxonomy' => 'wiki_project', 'field' => 'term_id', 'terms' => $project->term_id],
-                    ['taxonomy' => 'wiki_section', 'field' => 'term_id', 'terms' => $section['id']],
-                ],
-            ]);
-
+        foreach ($section_terms as $st) {
+            if (empty($by_section[$st->term_id])) continue;
             $tree[] = [
-                'section'  => $section,
-                'pages'    => self::build_page_tree($posts),
+                'section' => ['id' => $st->term_id, 'slug' => $st->slug, 'name' => $st->name],
+                'pages'   => self::build_page_tree($by_section[$st->term_id]),
             ];
+        }
+
+        if ($use_cache) {
+            set_transient($cache_key, $tree, HOUR_IN_SECONDS);
         }
 
         return $tree;
@@ -288,18 +334,53 @@ class Wipress_REST_API {
         return self::format_page_full($post);
     }
 
+    /**
+     * Sanitize page content according to its format.
+     *
+     * Markdown is stored raw and sanitized at render time (Wipress_Markdown::render
+     * runs wp_kses_post on the generated HTML). Running wp_kses_post on raw markdown
+     * corrupts it — it escapes lone `<`/`>` to entities, which Parsedown then double-escapes.
+     */
+    private static function prepare_content($content, $format) {
+        return $format === 'markdown' ? (string) $content : wp_kses_post($content);
+    }
+
+    /**
+     * Run a post insert/update with the core content kses filter disabled, so raw
+     * markdown is stored verbatim even for users without the `unfiltered_html`
+     * capability (otherwise `content_save_pre` would re-escape `<`/`>`).
+     */
+    private static function without_content_kses(callable $cb) {
+        $had = has_filter('content_save_pre', 'wp_filter_post_kses');
+        if ($had) {
+            remove_filter('content_save_pre', 'wp_filter_post_kses');
+            remove_filter('content_filtered_save_pre', 'wp_filter_post_kses');
+        }
+        try {
+            return $cb();
+        } finally {
+            if ($had) {
+                add_filter('content_save_pre', 'wp_filter_post_kses');
+                add_filter('content_filtered_save_pre', 'wp_filter_post_kses');
+            }
+        }
+    }
+
     public static function create_page_internal($data) {
+        $format = $data['content_format'] ?? 'html';
         $args = [
             'post_type'   => 'wiki',
             'post_title'  => sanitize_text_field($data['title'] ?? ''),
-            'post_content'=> wp_kses_post($data['content'] ?? ''),
+            'post_content'=> self::prepare_content($data['content'] ?? '', $format),
             'post_status' => 'publish',
         ];
 
         if (!empty($data['parent'])) $args['post_parent'] = (int)$data['parent'];
         if (isset($data['menu_order'])) $args['menu_order'] = (int)$data['menu_order'];
 
-        $post_id = wp_insert_post($args, true);
+        $post_id = $format === 'markdown'
+            ? self::without_content_kses(function() use ($args) { return wp_insert_post($args, true); })
+            : wp_insert_post($args, true);
         if (is_wp_error($post_id)) return $post_id;
 
         if (!empty($data['content_format'])) {
@@ -322,13 +403,21 @@ class Wipress_REST_API {
         }
 
         $args = ['ID' => $id];
+        $is_markdown = false;
         if (isset($data['title'])) $args['post_title'] = sanitize_text_field($data['title']);
-        if (isset($data['content'])) $args['post_content'] = wp_kses_post($data['content']);
+        if (isset($data['content'])) {
+            // Use the new format if provided, otherwise the page's existing format
+            $format = $data['content_format'] ?? (get_post_meta($id, '_wipress_content_format', true) ?: 'html');
+            $is_markdown = ($format === 'markdown');
+            $args['post_content'] = self::prepare_content($data['content'], $format);
+        }
         if (isset($data['menu_order'])) $args['menu_order'] = (int)$data['menu_order'];
         if (isset($data['parent'])) $args['post_parent'] = (int)$data['parent'];
         if (isset($data['status'])) $args['post_status'] = sanitize_text_field($data['status']);
 
-        $result = wp_update_post($args, true);
+        $result = $is_markdown
+            ? self::without_content_kses(function() use ($args) { return wp_update_post($args, true); })
+            : wp_update_post($args, true);
         if (is_wp_error($result)) return $result;
 
         if (!empty($data['content_format'])) {
@@ -392,10 +481,11 @@ class Wipress_REST_API {
             $summary = self::format_page_summary($p);
             // Add excerpt with search context
             $content = wp_strip_all_tags($p->post_content);
-            $pos = stripos($content, $query);
+            // Multibyte-safe excerpt so accented/non-ASCII content is not cut mid-character
+            $pos = mb_stripos($content, $query, 0, 'UTF-8');
             if ($pos !== false) {
                 $start = max(0, $pos - 80);
-                $summary['excerpt'] = '...' . substr($content, $start, 200) . '...';
+                $summary['excerpt'] = '...' . mb_substr($content, $start, 200, 'UTF-8') . '...';
             } else {
                 $summary['excerpt'] = wp_trim_words($content, 30);
             }
@@ -421,8 +511,9 @@ class Wipress_REST_API {
     }
 
     private static function format_page_summary($post) {
-        $projects = wp_get_object_terms($post->ID, 'wiki_project');
-        $sections = wp_get_object_terms($post->ID, 'wiki_section');
+        // get_the_terms() reads the cache primed by WP_Query, avoiding an N+1 query per page
+        $projects = get_the_terms($post, 'wiki_project');
+        $sections = get_the_terms($post, 'wiki_section');
 
         return [
             'id'         => $post->ID,
@@ -431,8 +522,8 @@ class Wipress_REST_API {
             'parent'     => $post->post_parent,
             'menu_order' => $post->menu_order,
             'url'        => get_permalink($post),
-            'project'    => !empty($projects) ? $projects[0]->slug : null,
-            'section'    => !empty($sections) ? $sections[0]->slug : null,
+            'project'    => (!empty($projects) && !is_wp_error($projects)) ? reset($projects)->slug : null,
+            'section'    => (!empty($sections) && !is_wp_error($sections)) ? reset($sections)->slug : null,
         ];
     }
 

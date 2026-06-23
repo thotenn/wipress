@@ -6,6 +6,7 @@ class Wipress_Template {
     public static function init() {
         add_filter('template_include', [__CLASS__, 'load_template']);
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
+        add_filter('script_loader_tag', [__CLASS__, 'filter_autoloader_tag'], 10, 2);
     }
 
     public static function load_template($template) {
@@ -38,8 +39,8 @@ class Wipress_Template {
 
         if (is_singular('wiki')) {
             $post_id = get_queried_object_id();
-            $terms = wp_get_object_terms($post_id, 'wiki_project');
-            if (!empty($terms) && !Wipress_REST_API::is_project_visible($terms[0])) {
+            $terms = get_the_terms($post_id, 'wiki_project');
+            if (!empty($terms) && !is_wp_error($terms) && !Wipress_REST_API::is_project_visible(reset($terms))) {
                 global $wp_query;
                 $wp_query->set_404();
                 status_header(404);
@@ -71,10 +72,30 @@ class Wipress_Template {
         wp_enqueue_style('wipress-style', WIPRESS_URL . 'assets/style.css', [], WIPRESS_VERSION);
         wp_enqueue_script('wipress-js', WIPRESS_URL . 'assets/script.js', [], WIPRESS_VERSION, true);
 
+        // Translatable strings for the frontend script
+        wp_localize_script('wipress-js', 'wipressI18n', [
+            'noResults'    => __('No results found', 'wipress'),
+            'searching'    => __('Searching...', 'wipress'),
+            'copyCode'     => __('Copy code', 'wipress'),
+            'copied'       => __('Copied!', 'wipress'),
+            'linkSection'  => __('Link to this section', 'wipress'),
+            'downloadFail' => __('Download failed', 'wipress'),
+        ]);
+
         if (is_singular('wiki')) {
-            wp_enqueue_script('prism', 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js', [], '1.29.0', true);
-            wp_enqueue_script('prism-autoloader', 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js', ['prism'], '1.29.0', true);
+            // Prism.js bundled locally (no external CDN) — autoloader fetches grammars on demand
+            wp_enqueue_script('prism', WIPRESS_URL . 'vendor/prism/prism.min.js', [], '1.29.0', true);
+            wp_enqueue_script('prism-autoloader', WIPRESS_URL . 'vendor/prism/prism-autoloader.min.js', ['prism'], '1.29.0', true);
         }
+    }
+
+    /**
+     * Point Prism's autoloader at the locally bundled language components.
+     */
+    public static function filter_autoloader_tag($tag, $handle) {
+        if ($handle !== 'prism-autoloader') return $tag;
+        $path = esc_url(WIPRESS_URL . 'vendor/prism/components/');
+        return str_replace(' src=', ' data-autoloader-path="' . $path . '" src=', $tag);
     }
 
     public static function get_sidebar_posts($project_id, $section_id) {
@@ -134,9 +155,10 @@ class Wipress_Template {
         // Group first post by section
         $section_first = [];
         foreach ($posts as $p) {
-            $terms = wp_get_object_terms($p->ID, 'wiki_section');
+            // get_the_terms() uses the cache primed by the query above (avoids N+1)
+            $terms = get_the_terms($p, 'wiki_section');
             if (empty($terms) || is_wp_error($terms)) continue;
-            $sid = $terms[0]->term_id;
+            $sid = reset($terms)->term_id;
             if (!isset($section_first[$sid])) {
                 $section_first[$sid] = [
                     'term'      => $terms[0],
