@@ -6,15 +6,27 @@ set -e
 
 PLUGIN_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_NAME="wipress"
-VERSION=$(grep "define('WIPRESS_VERSION'" "$PLUGIN_DIR/wipress.php" | grep -oP "'[0-9]+\.[0-9]+\.[0-9]+'" | tr -d "'")
+# Portable version extraction (BSD/macOS grep has no -P): grab the X.Y.Z from the
+# WIPRESS_VERSION define line.
+VERSION=$(grep "WIPRESS_VERSION" "$PLUGIN_DIR/wipress.php" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -1)
+if [ -z "$VERSION" ]; then
+    echo "ERROR: could not read WIPRESS_VERSION from wipress.php" >&2
+    exit 1
+fi
 OUTPUT_FILE="${PLUGIN_DIR}/${PLUGIN_NAME}-${VERSION}.zip"
 
 echo "Building ${PLUGIN_NAME} v${VERSION}..."
 
+# Start clean so a stale zip never gets re-added or shipped.
+rm -f "$OUTPUT_FILE"
+
 cd "$PLUGIN_DIR/.."
 
 zip -r "$OUTPUT_FILE" "$PLUGIN_NAME/" \
+    -x "${PLUGIN_NAME}/.git" \
     -x "${PLUGIN_NAME}/.git/*" \
+    -x "${PLUGIN_NAME}/.gitignore" \
+    -x "${PLUGIN_NAME}/.gitmodules" \
     -x "${PLUGIN_NAME}/docs/*" \
     -x "${PLUGIN_NAME}/CLAUDE.md" \
     -x "${PLUGIN_NAME}/README.md" \
