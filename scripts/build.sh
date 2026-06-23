@@ -1,10 +1,12 @@
 #!/bin/bash
-# Build WiPress plugin zip for distribution
-# Usage: ./build.sh
+# Build WiPress plugin zip for distribution.
+# Usage: make build   (or: bash scripts/build.sh)
 
 set -e
 
-PLUGIN_DIR="$(cd "$(dirname "$0")" && pwd)"
+# This script lives in <plugin>/scripts/, so the plugin root is its parent.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PLUGIN_NAME="wipress"
 # Portable version extraction (BSD/macOS grep has no -P): grab the X.Y.Z from the
 # WIPRESS_VERSION define line.
@@ -28,10 +30,11 @@ zip -r "$OUTPUT_FILE" "$PLUGIN_NAME/" \
     -x "${PLUGIN_NAME}/.gitignore" \
     -x "${PLUGIN_NAME}/.gitmodules" \
     -x "${PLUGIN_NAME}/docs/*" \
+    -x "${PLUGIN_NAME}/scripts/*" \
+    -x "${PLUGIN_NAME}/Makefile" \
     -x "${PLUGIN_NAME}/CLAUDE.md" \
     -x "${PLUGIN_NAME}/README.md" \
     -x "${PLUGIN_NAME}/CHANGELOG.md" \
-    -x "${PLUGIN_NAME}/build.sh" \
     -x "${PLUGIN_NAME}/*.zip"
 
 echo "Created: $OUTPUT_FILE"

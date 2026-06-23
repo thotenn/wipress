@@ -22,7 +22,9 @@ blocks/markdown/         → Gutenberg block (no build, uses wp.element directly
 templates/single-wiki.php → frontend 3-column layout
 templates/archive-wiki.php → project listing page (/wiki/)
 assets/                  → frontend CSS/JS (search, code copy, TOC, tree toggle, Prism.js theming) + editor panel JS
-build.sh                 → zip build script for distribution (excludes .git/, docs/, CLAUDE.md, README.md)
+Makefile                 → command index (run scripts via `make`); `make help` lists targets
+scripts/
+  build.sh               → zip build script for distribution (run via `make build`)
 ```
 
 ## Key Design Decisions
@@ -115,7 +117,8 @@ Write tools require Basic Auth (WordPress Application Passwords). Read tools are
 - **Changing breadcrumbs/prev-next**: modify HTML in `templates/single-wiki.php`, helpers in `class-template.php` (`get_prev_next`, `flatten_tree`), CSS in `assets/style.css` (`.wdh-breadcrumbs`, `.wdh-prev-next*`)
 - **Changing heading anchors**: modify JS in `assets/script.js` (TOC generation section, `.wdh-heading-anchor`), CSS in `assets/style.css`
 - **Changing syntax highlighting**: token colors in `assets/style.css` (`.token.*` rules with `[data-theme="light"]` variants), Prism.js CDN URLs in `class-template.php` (`enqueue_assets`)
-- **Building for distribution**: run `./build.sh` — creates `wipress-{version}.zip` excluding dev files
+- **Building for distribution**: run `make build` (wraps `scripts/build.sh`) — creates `wipress-{version}.zip` excluding dev files. Add new dev/release scripts under `scripts/` and wire them as `make` targets; run scripts via `make`, not directly
+- **Running project scripts**: always go through the `Makefile` (`make help` lists targets). Scripts live in `scripts/`; the Makefile only routes to them
 - **IMPORTANT — Always bump version**: after finishing ANY code modification (PHP, CSS, JS, templates), increment `WIPRESS_VERSION` in `wipress.php` before committing. Server-side caches (W3TC, CDN) differentiate cached assets by the `?ver=` query string, and stale versions will be served to some browsers if the version is not bumped
 
 ## Documentation
